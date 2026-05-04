@@ -7,13 +7,23 @@ export function Login() {
         onSubmit={(e) => {
           e.preventDefault();
           const formDataL = new FormData(e.currentTarget);
-          const usernameL = (formDataL.get('username') as string) || '';
-          const passwordL = (formDataL.get('password') as string) || '';
-
-          const sanitizedUsernameL = validator.escape(
-            validator.trim(usernameL),
+          const usernameL = validator.trim(
+            (formDataL.get('username') as string) || '',
           );
-          const sanitizedPasswordL = validator.trim(passwordL);
+
+          const passwordL = validator.trim(
+            (formDataL.get('password') as string) || '',
+          );
+
+          if (!usernameL || !passwordL) {
+            alert('Please enter both username and password.');
+            return;
+          }
+
+          if (!validator.isAlphanumeric(usernameL, 'en-US', { ignore: '_-' })) {
+            alert('Invalid username format.');
+            return;
+          }
         }}
       >
         <div>
