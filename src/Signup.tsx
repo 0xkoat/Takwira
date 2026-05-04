@@ -14,6 +14,10 @@ export function SignUp() {
           const passwordS = validator.trim(
             (formDataS.get('password') as string) || '',
           );
+
+          const confirmPasswordS = validator.trim(
+            (formDataS.get('confirmPassword') as string) || '',
+          );
           const emailS = validator.trim(
             (formDataS.get('email') as string) || '',
           );
@@ -62,6 +66,10 @@ export function SignUp() {
             alert('Please select your account type.');
             return;
           }
+          if (passwordS != confirmPasswordS) {
+            alert('Passwords do not match.');
+            return;
+          }
         }}
       >
         <div>
@@ -77,6 +85,16 @@ export function SignUp() {
         <div>
           <label htmlFor="password">Password</label>
           <input type="password" id="password" name="password" required />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+          />
         </div>
 
         <div>
