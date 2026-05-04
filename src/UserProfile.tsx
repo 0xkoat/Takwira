@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ProfilePhoto } from './ProfilePhoto';
-import { EditCredentials } from './EditCrendentials';
+import { EditCredentials } from './EditCredentials';
 
 export interface UserData {
   username: string;
@@ -10,23 +10,19 @@ export interface UserData {
   imageUrl: string;
 }
 
-//dummu user
 const INITIAL_USER: UserData = {
   username: 'koat',
   email: 'koat@example.com',
   phoneNumber: '12345678',
   role: 'normal_user',
-  imageUrl: 'blabla',
+  imageUrl: 'https://via.placeholder.com/150',
 };
 
 export function UserProfile() {
   const [user, setUser] = useState<UserData>(INITIAL_USER);
 
   const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl'>) => {
-    setUser((prev) => ({
-      ...prev,
-      ...updatedData,
-    }));
+    setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
   const handlePhotoUpdate = (newImageUrl: string) => {
@@ -34,11 +30,10 @@ export function UserProfile() {
   };
 
   return (
-    <div
-      className="user-profile"
-      style={{ maxWidth: 500, margin: '2rem auto', padding: '1rem' }}
-    >
-      <h2>My Profile</h2>
+    <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20">
+      <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-8">
+        My Profile
+      </h2>
 
       <ProfilePhoto
         imageUrl={user.imageUrl}
