@@ -8,17 +8,55 @@ export function SignUp() {
           e.preventDefault();
 
           const formDataS = new FormData(e.currentTarget);
-          const usernameS = (formDataS.get('username') as string) || '';
-          const passwordS = (formDataS.get('password') as string) || '';
-          const emailS = (formDataS.get('email') as string) || '';
-          const roleS = (formDataS.get('role') as string) || '';
-
-          const sanitizedUsernameS = validator.escape(
-            validator.trim(usernameS),
+          const usernameS = validator.trim(
+            (formDataS.get('username') as string) || '',
           );
+          const passwordS = validator.trim(
+            (formDataS.get('password') as string) || '',
+          );
+          const emailS = validator.trim(
+            (formDataS.get('email') as string) || '',
+          );
+          const phoneNumberS = validator.trim(
+            (formDataS.get('phoneNumber') as string) || '',
+          );
+          const roleS = validator.trim((formDataS.get('role') as string) || '');
 
-          const sanitizedPasswordS = validator.trim(passwordS);
-          const sanitizedEmailS = validator.escape(validator.trim(emailS));
+          if (
+            !validator.isAlphanumeric(usernameS, 'en-US', {
+              ignore: '_-',
+            })
+          ) {
+            alert(
+              'Please enter a valid username(only _ and - are allowed as symbols',
+            );
+            return;
+          }
+
+          if (
+            !validator.isStrongPassword(passwordS, {
+              minLength: 8,
+              minLowercase: 1,
+              minUppercase: 1,
+              minNumbers: 1,
+              minSymbols: 1,
+            })
+          ) {
+            alert(
+              'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
+            );
+            return;
+          }
+
+          if (!validator.isEmail(emailS)) {
+            alert('Please enter a valid email address.');
+            return;
+          }
+
+          if (!validator.isMobilePhone(phoneNumberS)) {
+            alert('Please enter a valid phone number.');
+            return;
+          }
 
           if (!roleS) {
             alert('Please select your account type.');
@@ -42,6 +80,11 @@ export function SignUp() {
         </div>
 
         <div>
+          <label htmlFor="phoneNumber">Phone Number</label>
+          <input type="text" id="phoneNumber" name="phoneNumber" required />
+        </div>
+
+        <div>
           <fieldset>
             <legend>I am a:</legend>
             <label>
@@ -56,7 +99,7 @@ export function SignUp() {
         </div>
 
         <div>
-          <button type="submit">Login</button>
+          <button type="submit">Sign Up</button>
         </div>
       </form>
     </div>
