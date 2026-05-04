@@ -1,6 +1,10 @@
 import validator from 'validator';
 
-export function Login() {
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
+
+export function Login({ onLoginSuccess }: LoginProps) {
   return (
     <div className="login-form">
       <form
@@ -24,6 +28,7 @@ export function Login() {
             alert('Invalid username format.');
             return;
           }
+          onLoginSuccess();
         }}
       >
         <div>

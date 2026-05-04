@@ -1,6 +1,10 @@
 import validator from 'validator';
 
-export function SignUp() {
+interface SignUpProps {
+  onSignUpSuccess: () => void;
+}
+
+export function SignUp({ onSignUpSuccess }: SignUpProps) {
   return (
     <div className="sign-up-form">
       <form
@@ -70,6 +74,8 @@ export function SignUp() {
             alert('Passwords do not match.');
             return;
           }
+
+          onSignUpSuccess();
         }}
       >
         <div>
