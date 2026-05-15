@@ -1,0 +1,45 @@
+{
+  "name": "takwira",
+  "version": "1.0.0",
+  "description": "football match finding app",
+  "homepage": "https://github.com/0xkoat/Takwira#readme",
+  "bugs": {
+    "url": "https://github.com/0xkoat/Takwira/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xkoat/Takwira.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{js,jsx,css,html,ts,tsx}\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.24.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "prettier": "^3.8.3",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.21.0",
+    "vite": "^8.0.10",
+    "@types/validator": "^13.12.2"
+  },
+  "dependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "validator": "^13.12.0"
+  }
+}
