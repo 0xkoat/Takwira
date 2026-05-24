@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { StadiumsList, ALL_STADIUMS } from './Stadiums';
+import { StadiumsList } from './StadiumsList';
+import { ALL_STADIUMS } from './stadiumData';
 
 export function StadiumsPage() {
   const [cityFilter, setCityFilter] = useState('');
