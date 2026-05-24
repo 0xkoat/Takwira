@@ -5,8 +5,14 @@ interface ProfilePhotoProps {
   onPhotoUpdate: (newImageUrl: string) => void;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; 
+const ALLOWED_TYPES = ['image/jpeg','image/jpg' , 'image/png', 'image/webp'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+const getFileExtension = (fileName: string) => {
+  const match = fileName.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return match ? match[1] : '';
+};
 
 export function ProfilePhoto({ imageUrl, onPhotoUpdate }: ProfilePhotoProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -23,10 +29,16 @@ export function ProfilePhoto({ imageUrl, onPhotoUpdate }: ProfilePhotoProps) {
       setPhotoError('Photo must be smaller than 5 MB.');
       return;
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setPhotoError('Only JPEG, PNG, GIF, WebP allowed.');
+
+    const extension = getFileExtension(file.name);
+    const validType = ALLOWED_TYPES.includes(file.type);
+    const validExtension = ALLOWED_EXTENSIONS.includes(extension);
+
+    if (!validType && !validExtension) {
+      setPhotoError('Only JPEG, JPG , PNG or WebP images are allowed.');
       return;
     }
+
     setPhotoFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPhotoPreview(reader.result as string);
