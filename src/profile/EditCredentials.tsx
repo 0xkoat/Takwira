@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import validator from 'validator';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { UserRole } from '../types/UserData.tsx';
 
 interface Profile {
@@ -15,6 +17,19 @@ interface Profile {
   }) => void;
 }
 
+const schema = z.object({
+  username: z
+    .string()
+    .min(3, 'Username must be 3–30 characters.')
+    .max(30)
+    .regex(/^[A-Za-z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, underscores.'),
+  email: z.string().email('Please enter a valid email address.'),
+  phoneNumber: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, 'Please enter a valid phone number.'),
+  role: z.nativeEnum(UserRole),
+});
+
+type FormData = z.infer<typeof schema>;
+
 export function EditCredentials({
   username,
   email,
@@ -23,79 +38,53 @@ export function EditCredentials({
   onSave,
 }: Profile) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editUsername, setEditUsername] = useState(username);
-  const [editEmail, setEditEmail] = useState(email);
-  const [editPhone, setEditPhone] = useState(phoneNumber);
-  const [editRole, setEditRole] = useState<UserRole>(role);
-  const [error, setError] = useState<string | null>(null);
 
-  const validate = (): boolean => {
-    const u = validator.trim(editUsername);
-    const e = validator.trim(editEmail);
-    const p = validator.trim(editPhone);
-    if (!validator.isLength(u, { min: 3, max: 30 })) {
-      setError('Username must be 3–30 characters.');
-      return false;
-    }
-    if (!validator.isAlphanumeric(u, 'en-US', { ignore: '_-' })) {
-      setError(
-        'Username can only contain letters, numbers, hyphens, underscores.',
-      );
-      return false;
-    }
-    if (!validator.isEmail(e)) {
-      setError('Please enter a valid email address.');
-      return false;
-    }
-    if (!validator.isMobilePhone(p, 'any')) {
-      setError('Please enter a valid phone number.');
-      return false;
-    }
-    return true;
-  };
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      username,
+      email,
+      phoneNumber,
+      role,
+    },
+  });
 
   const handleStartEdit = () => {
-    setEditUsername(username);
-    setEditEmail(email);
-    setEditPhone(phoneNumber);
-    setEditRole(role);
-    setError(null);
+    reset({ username, email, phoneNumber, role });
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setError(null);
+    reset({ username, email, phoneNumber, role });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    onSave({
-      username: validator.trim(editUsername),
-      email: validator.trim(editEmail),
-      phoneNumber: validator.trim(editPhone),
-      role: editRole,
-    });
+  const onSubmit = (data: FormData) => {
+    onSave(data);
     setIsEditing(false);
-    setError(null);
   };
 
   if (isEditing) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-5 animate-fadeIn">
+      <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-5 animate-fadeIn">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
             Username
           </label>
           <input
             type="text"
-            value={editUsername}
-            onChange={(e) => setEditUsername(e.target.value)}
-            required
+            {...register('username')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
           />
+          {errors.username && (
+            <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -103,12 +92,13 @@ export function EditCredentials({
           </label>
           <input
             type="email"
-            value={editEmail}
-            onChange={(e) => setEditEmail(e.target.value)}
-            required
+            {...register('email')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
           />
+          {errors.email && (
+            <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -116,12 +106,13 @@ export function EditCredentials({
           </label>
           <input
             type="text"
-            value={editPhone}
-            onChange={(e) => setEditPhone(e.target.value)}
-            required
+            {...register('phoneNumber')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
           />
+          {errors.phoneNumber && (
+            <p className="text-red-400 text-sm mt-1">{errors.phoneNumber.message}</p>
+          )}
         </div>
         <div>
           <fieldset>
@@ -132,10 +123,8 @@ export function EditCredentials({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="role"
                   value={UserRole.StadiumOwner}
-                  checked={editRole === UserRole.StadiumOwner}
-                  onChange={() => setEditRole(UserRole.StadiumOwner)}
+                  {...register('role')}
                   className="accent-emerald-500 w-4 h-4"
                 />
                 <span className="text-gray-300">Stadium Owner</span>
@@ -143,10 +132,8 @@ export function EditCredentials({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="role"
                   value={UserRole.NormalUser}
-                  checked={editRole === UserRole.NormalUser}
-                  onChange={() => setEditRole(UserRole.NormalUser)}
+                  {...register('role')}
                   className="accent-emerald-500 w-4 h-4"
                 />
                 <span className="text-gray-300">Normal User</span>
@@ -154,7 +141,7 @@ export function EditCredentials({
             </div>
           </fieldset>
         </div>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {errors.role && <p className="text-red-400 text-sm">{errors.role.message}</p>}
         <div className="flex gap-3">
           <button
             type="submit"
@@ -174,7 +161,6 @@ export function EditCredentials({
     );
   }
 
-  // View mode
   return (
     <div className="space-y-4 animate-fadeIn">
       <div className="bg-gray-800/50 rounded-xl p-4 space-y-3">

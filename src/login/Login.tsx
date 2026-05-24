@@ -1,75 +1,63 @@
-import validator from 'validator';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface LoginProps {
   onLoginSuccess: () => void;
 }
 
+const loginSchema = z.object({
+  username: z
+    .string()
+    .min(1, 'Please enter your username.')
+    .regex(/^[A-Za-z0-9_-]+$/, 'Invalid username format.'),
+  password: z.string().min(1, 'Please enter your password.'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
 export function Login({ onLoginSuccess }: LoginProps) {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { username: '', password: '' },
+  });
+
+  const onSubmit = (_data: LoginForm) => {
+    onLoginSuccess();
+  };
+
   return (
     <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20">
-      <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">
-        Welcome back
-      </h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const form = e.currentTarget as HTMLFormElement;
-          const usernameL = validator.trim(
-            ((form.elements.namedItem('username') as HTMLInputElement)?.value as string) || '',
-          );
-          const passwordL = validator.trim(
-            ((form.elements.namedItem('password') as HTMLInputElement)?.value as string) || '',
-          );
-
-          if (!usernameL || !passwordL) {
-            alert('Please enter both username and password.');
-            return;
-          }
-          if (!validator.isAlphanumeric(usernameL, 'en-US', { ignore: '_-' })) {
-            alert('Invalid username format.');
-            return;
-          }
-          onLoginSuccess();
-        }}
-        className="space-y-5"
-      >
+      <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">Welcome back</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-gray-300 mb-1"
-          >
+          <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
             Username
           </label>
           <input
             type="text"
             id="username"
-            name="username"
-            required
+            {...register('username')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           />
+          {errors.username && <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>}
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-300 mb-1"
-          >
+          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
             Password
           </label>
           <input
             type="password"
             id="password"
-            name="password"
-            required
+            {...register('password')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           />
+          {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
           <div className="text-right mt-1">
-            <a
-              href="/forgot-password"
-              className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
-            >
+            <a href="/forgot-password" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
               Forgot password?
             </a>
           </div>
