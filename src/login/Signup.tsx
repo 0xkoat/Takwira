@@ -13,23 +13,24 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const formDataS = new FormData(e.currentTarget);
+          const form = e.currentTarget as HTMLFormElement;
           const usernameS = validator.trim(
-            (formDataS.get('username') as string) || '',
+            ((form.elements.namedItem('username') as HTMLInputElement)?.value as string) || '',
           );
           const passwordS = validator.trim(
-            (formDataS.get('password') as string) || '',
+            ((form.elements.namedItem('password') as HTMLInputElement)?.value as string) || '',
           );
           const confirmPasswordS = validator.trim(
-            (formDataS.get('confirmPassword') as string) || '',
+            ((form.elements.namedItem('confirmPassword') as HTMLInputElement)?.value as string) || '',
           );
           const emailS = validator.trim(
-            (formDataS.get('email') as string) || '',
+            ((form.elements.namedItem('email') as HTMLInputElement)?.value as string) || '',
           );
           const phoneNumberS = validator.trim(
-            (formDataS.get('phoneNumber') as string) || '',
+            ((form.elements.namedItem('phoneNumber') as HTMLInputElement)?.value as string) || '',
           );
-          const roleS = validator.trim((formDataS.get('role') as string) || '');
+          const roleInput = form.querySelector('input[name="role"]:checked') as HTMLInputElement | null;
+          const roleS = validator.trim((roleInput?.value as string) || '');
 
           if (!validator.isAlphanumeric(usernameS, 'en-US', { ignore: '_-' })) {
             alert('Please enter a valid username (only _ and - are allowed).');

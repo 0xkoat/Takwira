@@ -13,12 +13,12 @@ export function Login({ onLoginSuccess }: LoginProps) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const formDataL = new FormData(e.currentTarget);
+          const form = e.currentTarget as HTMLFormElement;
           const usernameL = validator.trim(
-            (formDataL.get('username') as string) || '',
+            ((form.elements.namedItem('username') as HTMLInputElement)?.value as string) || '',
           );
           const passwordL = validator.trim(
-            (formDataL.get('password') as string) || '',
+            ((form.elements.namedItem('password') as HTMLInputElement)?.value as string) || '',
           );
 
           if (!usernameL || !passwordL) {
