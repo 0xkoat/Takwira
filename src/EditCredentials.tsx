@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import validator from 'validator';
 
-interface EditCredentialsProps {
+export enum UserRole {
+  StadiumOwner = 'stadium_owner',
+  NormalUser = 'normal_user',
+}
+
+interface Profile {
   username: string;
   email: string;
   phoneNumber: string;
-  role: 'stadium_owner' | 'normal_user';
+  role: UserRole;
   onSave: (data: {
     username: string;
     email: string;
     phoneNumber: string;
-    role: 'stadium_owner' | 'normal_user';
+    role: UserRole;
   }) => void;
 }
 
@@ -20,36 +25,34 @@ export function EditCredentials({
   phoneNumber,
   role,
   onSave,
-}: EditCredentialsProps) {
+}: Profile) {
   const [isEditing, setIsEditing] = useState(false);
   const [editUsername, setEditUsername] = useState(username);
   const [editEmail, setEditEmail] = useState(email);
   const [editPhone, setEditPhone] = useState(phoneNumber);
-  const [editRole, setEditRole] = useState<'stadium_owner' | 'normal_user'>(
-    role,
-  );
-  const [errors, setErrors] = useState<string | null>(null);
+  const [editRole, setEditRole] = useState<UserRole>(role);
+  const [error, setError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const u = validator.trim(editUsername);
     const e = validator.trim(editEmail);
     const p = validator.trim(editPhone);
     if (!validator.isLength(u, { min: 3, max: 30 })) {
-      setErrors('Username must be 3–30 characters.');
+      setError('Username must be 3–30 characters.');
       return false;
     }
     if (!validator.isAlphanumeric(u, 'en-US', { ignore: '_-' })) {
-      setErrors(
+      setError(
         'Username can only contain letters, numbers, hyphens, underscores.',
       );
       return false;
     }
     if (!validator.isEmail(e)) {
-      setErrors('Please enter a valid email address.');
+      setError('Please enter a valid email address.');
       return false;
     }
     if (!validator.isMobilePhone(p, 'any')) {
-      setErrors('Please enter a valid phone number.');
+      setError('Please enter a valid phone number.');
       return false;
     }
     return true;
@@ -60,13 +63,13 @@ export function EditCredentials({
     setEditEmail(email);
     setEditPhone(phoneNumber);
     setEditRole(role);
-    setErrors(null);
+    setError(null);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setErrors(null);
+    setError(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,7 +82,7 @@ export function EditCredentials({
       role: editRole,
     });
     setIsEditing(false);
-    setErrors(null);
+    setError(null);
   };
 
   if (isEditing) {
@@ -134,9 +137,9 @@ export function EditCredentials({
                 <input
                   type="radio"
                   name="role"
-                  value="stadium_owner"
-                  checked={editRole === 'stadium_owner'}
-                  onChange={() => setEditRole('stadium_owner')}
+                  value={UserRole.StadiumOwner}
+                  checked={editRole === UserRole.StadiumOwner}
+                  onChange={() => setEditRole(UserRole.StadiumOwner)}
                   className="accent-emerald-500 w-4 h-4"
                 />
                 <span className="text-gray-300">Stadium Owner</span>
@@ -145,9 +148,9 @@ export function EditCredentials({
                 <input
                   type="radio"
                   name="role"
-                  value="normal_user"
-                  checked={editRole === 'normal_user'}
-                  onChange={() => setEditRole('normal_user')}
+                  value={UserRole.NormalUser}
+                  checked={editRole === UserRole.NormalUser}
+                  onChange={() => setEditRole(UserRole.NormalUser)}
                   className="accent-emerald-500 w-4 h-4"
                 />
                 <span className="text-gray-300">Normal User</span>
@@ -155,7 +158,7 @@ export function EditCredentials({
             </div>
           </fieldset>
         </div>
-        {errors && <p className="text-red-400 text-sm">{errors}</p>}
+        {error && <p className="text-red-400 text-sm">{error}</p>}
         <div className="flex gap-3">
           <button
             type="submit"
@@ -194,7 +197,7 @@ export function EditCredentials({
         <div className="flex justify-between">
           <span className="text-gray-400">Role</span>
           <span className="text-white font-medium">
-            {role === 'stadium_owner' ? 'Stadium Owner' : 'Normal User'}
+            {role === UserRole.StadiumOwner ? 'Stadium Owner' : 'Normal User'}
           </span>
         </div>
       </div>
