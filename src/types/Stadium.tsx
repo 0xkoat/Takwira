@@ -9,3 +9,12 @@ export interface Stadium {
   price: string;
   placesNum: string;
 }
+
+export interface StadiumCardProps {
+  stadium: Stadium;
+}
+
+export interface StadiumsListProps {
+  stadiums: Stadium[];
+}
+
