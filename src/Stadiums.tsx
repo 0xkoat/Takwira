@@ -4,7 +4,7 @@ export interface Stadium {
   ownerNumber: string;
   city: string;
   locationURL: string;
-  imageUrl: string[];
+  images: string[];
   principalImageUrl: string;
   price: string;
   placesNum: string;
@@ -19,7 +19,7 @@ export const ALL_STADIUMS: Stadium[] = [
     ownerNumber: '12345678',
     city: 'tunis',
     locationURL: 'https://google.com',
-    imageUrl: [
+    images: [
       'https://via.placeholder.com/150',
       'https://via.placeholder.com/150',
     ],
@@ -33,7 +33,7 @@ export const ALL_STADIUMS: Stadium[] = [
     ownerNumber: '12345678',
     city: 'tunis',
     locationURL: 'https://google.com',
-    imageUrl: [
+    images: [
       'https://via.placeholder.com/150',
       'https://via.placeholder.com/150',
     ],
@@ -47,7 +47,7 @@ export const ALL_STADIUMS: Stadium[] = [
     ownerNumber: '12345678',
     city: 'tunis',
     locationURL: 'https://google.com',
-    imageUrl: [
+    images: [
       'https://via.placeholder.com/150',
       'https://via.placeholder.com/150',
     ],
