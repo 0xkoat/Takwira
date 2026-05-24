@@ -1,9 +1,8 @@
 import { Dispatch, SetStateAction } from 'react';
-import { Login } from './Login';
-import { SignUp } from './Signup';
-import { UserProfile } from './UserProfile';
-
-type Page = 'login' | 'signup' | 'profile';
+import { Login } from './login/Login';
+import { SignUp } from './login/Signup';
+import { UserProfile } from './profile/UserProfile';
+import { Page } from './types/Page';
 
 interface PageNavigationProps {
   currentPage: Page;

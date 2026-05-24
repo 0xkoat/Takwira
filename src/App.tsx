@@ -3,8 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { StrictMode, useState } from 'react';
 import { Header } from './Header';
 import { PageNavigation } from './PageNavigation';
-
-type Page = 'login' | 'signup' | 'profile';
+import { Page } from './types/Page';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState<Page>('login');
