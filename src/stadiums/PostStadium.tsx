@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +33,7 @@ const stadiumSchema = z.object({
 type StadiumForm = z.infer<typeof stadiumSchema>;
 
 export default function PostStadium() {
+  const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<StadiumForm>({
     resolver: zodResolver(stadiumSchema),
@@ -58,7 +60,16 @@ export default function PostStadium() {
 
   return (
     <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20 max-w-3xl">
-      <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">Post your stadium</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-semibold text-emerald-400">Post your stadium</h2>
+        <button
+          onClick={() => navigate({ to: '/stadiums' })}
+          type="button"
+          className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-all"
+        >
+          Back to Stadiums
+        </button>
+      </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">Stadium name</label>
