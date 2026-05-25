@@ -51,7 +51,7 @@ export default function PostStadium() {
     const files = Array.from(data.images as FileList) as File[];
     files.forEach((f) => formData.append('images', f, f.name));
 
-    // to replace with  API call
+    // to replace with  API call (robaa siks)
     console.log('Submitting stadium:', { name: data.name, address: data.address, capacity: data.capacity, filesCount: files.length });
     alert('Stadium submitted (demo).');
   };

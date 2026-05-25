@@ -12,7 +12,7 @@ const signUpSchema = z
     email: z.string().email('Please enter a valid email address.'),
     username: z
       .string()
-      .min(1)
+      .min(3)
       .regex(/^[A-Za-z0-9_-]+$/, 'Please enter a valid username (only _ and - are allowed).'),
     password: z
       .string()

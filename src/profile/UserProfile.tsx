@@ -1,26 +1,27 @@
-import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { ProfilePhoto } from './ProfilePhoto';
 import { EditCredentials } from './EditCredentials';
-import { UserData, UserRole } from '../types/UserData';
-
-
-const INITIAL_USER: UserData = {
-  username: 'koat',
-  email: 'koat@example.com',
-  phoneNumber: '12345678',
-  role: UserRole.NormalUser,
-  imageUrl: 'https://via.placeholder.com/150',
-};
+import { UserData } from '../types/UserData';
 
 export function UserProfile() {
-  const [user, setUser] = useState<UserData>(INITIAL_USER);
+  const { user, updateUser } = useAuth();
+
+  if (!user) {
+    return null;
+  }
 
   const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl'>) => {
-    setUser((prev) => ({ ...prev, ...updatedData }));
+    updateUser({
+      ...user,
+      ...updatedData,
+    });
   };
 
   const handlePhotoUpdate = (newImageUrl: string) => {
-    setUser((prev) => ({ ...prev, imageUrl: newImageUrl }));
+    updateUser({
+      ...user,
+      imageUrl: newImageUrl,
+    });
   };
 
   return (

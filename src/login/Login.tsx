@@ -1,9 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { UserData, UserRole } from '../types/UserData';
+import { Link } from '@tanstack/react-router';
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (user : UserData) => void;
 }
 
 const loginSchema = z.object({
@@ -22,8 +24,18 @@ export function Login({ onLoginSuccess }: LoginProps) {
     defaultValues: { username: '', password: '' },
   });
 
-  const onSubmit = (_data: LoginForm) => {
-    onLoginSuccess();
+  const onSubmit = (data: LoginForm) => {
+    const role = data.username.toLowerCase() === 'owner' ? UserRole.StadiumOwner : UserRole.NormalUser;
+
+    const fakeUser: UserData = {
+      username: data.username,
+      email: 'robaa@siks.com',
+      phoneNumber: '123454678',
+      role,
+      imageUrl: '',
+    };
+    onLoginSuccess(fakeUser);
+   
   };
 
   return (
@@ -70,6 +82,12 @@ export function Login({ onLoginSuccess }: LoginProps) {
         >
           Login
         </button>
+        <p className="text-center text-gray-400 text-sm">
+          Don’t have an account?{' '}
+          <Link to="/signup" className="text-emerald-400 hover:text-emerald-300">
+            Sign up
+          </Link>
+        </p>
       </form>
     </div>
   );
