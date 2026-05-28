@@ -1,5 +1,9 @@
 node_modules
+pnpm-lock.yaml
 dist/
+apps/**/node_modules
+apps/**/dist
+packages/**/dist
 .env
 .vscode
 routeTree.gen.ts
