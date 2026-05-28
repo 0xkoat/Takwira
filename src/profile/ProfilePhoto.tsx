@@ -1,13 +1,11 @@
 import { useState, useRef } from 'react';
 
+import { ALLOWED_EXTENSIONS, ALLOWED_TYPES, MAX_FILE_SIZE } from '../types/fileValidation';
+
 interface ProfilePhotoProps {
   imageUrl: string;
   onPhotoUpdate: (newImageUrl: string) => void;
 }
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; 
-const ALLOWED_TYPES = ['image/jpeg','image/jpg' , 'image/png', 'image/webp'];
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
 const getFileExtension = (fileName: string) => {
   const match = fileName.toLowerCase().match(/\.([a-z0-9]+)$/);

@@ -2,9 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+import { ALLOWED_EXTENSIONS, ALLOWED_TYPES } from '../types/fileValidation';
 
 const getFileExtension = (name: string) => {
   const parts = name.split('.');
