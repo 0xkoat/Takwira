@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from '@tanstack/react-router';
 import { UserRole } from '../types/UserData.tsx';
 
 interface SignUpProps {
@@ -134,6 +135,13 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
         >
           Sign Up
         </button>
+        <Link
+          to="/"
+          className="block text-center w-full py-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold
+                     transition-all duration-300 hover:shadow-lg hover:shadow-black/20 mt-3"
+        >
+          Back to Login
+        </Link>
       </form>
     </div>
   );
