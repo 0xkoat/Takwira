@@ -4,19 +4,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserRole } from '../types/UserData.tsx';
 
-interface Profile {
-  username: string;
-  email: string;
-  phoneNumber: string;
-  role: UserRole;
-  onSave: (data: {
-    username: string;
-    email: string;
-    phoneNumber: string;
-    role: UserRole;
-  }) => void;
-}
-
 const schema = z.object({
   username: z
     .string()
@@ -28,7 +15,13 @@ const schema = z.object({
   role: z.nativeEnum(UserRole),
 });
 
-type FormData = z.infer<typeof schema>;
+type ProfileData = z.infer<typeof schema>;
+
+interface Profile extends ProfileData {
+  onSave: (data: ProfileData) => void;
+}
+
+type FormData = ProfileData;
 
 export function EditCredentials({
   username,
