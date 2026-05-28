@@ -4,3 +4,5 @@ dist/
 .vscode
 routeTree.gen.ts
 .tanstack
+.postman
+postman
