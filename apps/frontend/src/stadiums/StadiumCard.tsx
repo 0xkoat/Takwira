@@ -25,7 +25,7 @@ export function StadiumCard({ stadium }: StadiumCardProps) {
           <span className="text-gray-400">City:</span> {stadium.city}
         </p>
         <p>
-          <span className="text-gray-400">Price:</span> {stadium.price} TND
+          <span className="text-gray-400">Price:</span> {stadium.price}
         </p>
         <p>
           <span className="text-gray-400">Places:</span> {stadium.placesNum}

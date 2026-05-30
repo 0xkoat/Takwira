@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import stadiumsRouter from './api/stadiums';
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -14,6 +15,8 @@ app.get('/health', (_req, res) => {
 app.get('/api/ping', (_req, res) => {
   res.json({ message: 'pong' });
 });
+
+app.use('/api/stadiums', stadiumsRouter);
 
 app.listen(port, () => {
   console.log(`Backend listening on http://localhost:${port}`);

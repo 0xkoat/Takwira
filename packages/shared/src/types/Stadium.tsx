@@ -1,5 +1,5 @@
 export interface Stadium {
-  id: Number;
+  id: number;
   name: string;
   ownerName: string;
   ownerNumber: string;
@@ -18,4 +18,3 @@ export interface StadiumCardProps {
 export interface StadiumsListProps {
   stadiums: Stadium[];
 }
-
