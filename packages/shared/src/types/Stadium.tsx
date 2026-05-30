@@ -1,4 +1,5 @@
 export interface Stadium {
+  id: Number;
   name: string;
   ownerName: string;
   ownerNumber: string;

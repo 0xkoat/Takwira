@@ -10,3 +10,4 @@ routeTree.gen.ts
 .tanstack
 .postman
 postman
+tsconfig.tsbuildinfo
