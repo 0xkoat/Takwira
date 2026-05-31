@@ -2,7 +2,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../context/AuthContext';
 import { ProfilePhoto } from './ProfilePhoto';
 import { EditCredentials } from './EditCredentials';
-import { UserData } from '@takwira/shared';
+import { OwnerStadiums } from './OwnerStadiums';
+import { UserData, UserRole } from '@takwira/shared';
 
 export function UserProfile() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export function UserProfile() {
     return null;
   }
 
-  const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl'>) => {
+  const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl' | 'id'>) => {
     updateUser({
       ...user,
       ...updatedData,
@@ -52,6 +53,8 @@ export function UserProfile() {
         role={user.role}
         onSave={handleCredentialsUpdate}
       />
+
+      {user.role === UserRole.StadiumOwner && <OwnerStadiums />}
     </div>
   );
 }

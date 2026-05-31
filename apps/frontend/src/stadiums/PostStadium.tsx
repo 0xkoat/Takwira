@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ALLOWED_EXTENSIONS, ALLOWED_TYPES } from '@takwira/shared';
+import { useAuth } from '../context/AuthContext';
 
 const getFileExtension = (name: string) => {
   const parts = name.split('.');
@@ -32,6 +33,7 @@ type StadiumForm = z.infer<typeof stadiumSchema>;
 
 export default function PostStadium() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<StadiumForm>({
     resolver: zodResolver(stadiumSchema),
@@ -39,8 +41,7 @@ export default function PostStadium() {
     defaultValues: { name: '', address: '', capacity: 0, pricePerHour: 0, description: '' as any },
   });
 
-  const onSubmit = (data: StadiumForm) => {
-   
+  const onSubmit = async (data: StadiumForm) => {
     const formData = new FormData();
     formData.append('name', data.name);
     formData.append('address', data.address);
@@ -48,12 +49,23 @@ export default function PostStadium() {
     formData.append('pricePerHour', String(data.pricePerHour));
     if (data.description) formData.append('description', data.description);
 
+    
+    if (user) {
+      formData.append('ownerId', String(user.id));
+      formData.append('ownerName', user.username);
+      formData.append('ownerNumber', user.phoneNumber);
+    }
+
     const files = Array.from(data.images as FileList) as File[];
     files.forEach((f) => formData.append('images', f, f.name));
 
-    // to replace with  API call (robaa siks)
-    console.log('Submitting stadium:', { name: data.name, address: data.address, capacity: data.capacity, filesCount: files.length });
-    alert('Stadium submitted (demo).');
+    const res = await fetch('http://localhost:4000/api/stadiums', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error('Failed to post stadium');
+    navigate({ to: '/profile' });
   };
 
   return (

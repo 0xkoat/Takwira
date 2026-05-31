@@ -28,6 +28,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
     const role = data.username.toLowerCase() === 'owner' ? UserRole.StadiumOwner : UserRole.NormalUser;
 
     const fakeUser: UserData = {
+      id: 1,
       username: data.username,
       email: 'robaa@siks.com',
       phoneNumber: '123454678',

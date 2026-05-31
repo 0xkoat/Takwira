@@ -1,17 +1,37 @@
 import express, { Request, Response, Router } from "express";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 import { stadiums } from "../data/stadiums";
 import { Stadium } from "@takwira/shared";
 
-const stadiumsRouter : Router = express.Router() ;
+const STADIUMS_FILE = path.resolve(__dirname, "../data/stadiums.ts");
+
+const persistStadiums = () => {
+    const serialised = JSON.stringify(stadiums, null, 2);
+    const content = `import { Stadium } from "@takwira/shared";\n\nexport const stadiums: Stadium[] = ${serialised};\n`;
+    fs.writeFileSync(STADIUMS_FILE, content, "utf-8");
+};
+
+const stadiumsRouter: Router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 const parseNumericValue = (val: string) => {
     const match = val.match(/(\d+(\.\d+)?)/);
     return match ? parseFloat(match[0]) : NaN;
 };
 
+// GET /api/stadiums — list all (with optional filters including ownerId)
 stadiumsRouter.get('/', (req: Request, res: Response) => {
-    const { city, minPrice, maxPrice, exactPlaces } = req.query;
+    const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query;
     let filteredStadiums: Stadium[] = stadiums;
+
+    if (typeof ownerId === 'string' && ownerId.trim()) {
+        const parsed = parseInt(ownerId);
+        if (!isNaN(parsed)) {
+            filteredStadiums = filteredStadiums.filter(s => s.ownerId === parsed);
+        }
+    }
 
     if (typeof city === 'string' && city.trim()) {
         const cityFilter = city.trim().toLowerCase();
@@ -44,7 +64,73 @@ stadiumsRouter.get('/', (req: Request, res: Response) => {
     }
 
     res.json(filteredStadiums);
-    
-})
+});
+
+
+stadiumsRouter.post('/', upload.array('images'), (req: Request, res: Response) => {
+    const { name, address, capacity, pricePerHour, description, ownerId, ownerName, ownerNumber } = req.body;
+
+    const files = (req.files as Express.Multer.File[]) ?? [];
+    const imageUrls = files.map((f) => `data:${f.mimetype};base64,${f.buffer.toString('base64')}`);
+
+    const newStadium: Stadium = {
+        id: stadiums.length + 1,
+        ownerId: parseInt(ownerId) || 0,
+        name,
+        ownerName: ownerName ?? 'Unknown',
+        ownerNumber: ownerNumber ?? 'Unknown',
+        city: address,
+        locationURL: '',
+        images: imageUrls,
+        principalImageUrl: imageUrls[0] ?? '',
+        price: `${pricePerHour} TND/hour`,
+        placesNum: String(capacity),
+        description: description ?? '',
+    };
+
+    stadiums.push(newStadium);
+    persistStadiums();
+    res.status(201).json(newStadium);
+});
+
+// PUT /api/stadiums/:id — update an existing stadium
+stadiumsRouter.put('/:id', (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const index = stadiums.findIndex(s => s.id === id);
+
+    if (index === -1) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    const { name, address, capacity, pricePerHour, description } = req.body;
+
+    stadiums[index] = {
+        ...stadiums[index],
+        name: name ?? stadiums[index].name,
+        city: address ?? stadiums[index].city,
+        placesNum: capacity ? String(capacity) : stadiums[index].placesNum,
+        price: pricePerHour ? `${pricePerHour} TND/hour` : stadiums[index].price,
+        description: description ?? stadiums[index].description,
+    };
+
+    persistStadiums();
+    res.json(stadiums[index]);
+});
+
+// DELETE /api/stadiums/:id — remove a stadium
+stadiumsRouter.delete('/:id', (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const index = stadiums.findIndex(s => s.id === id);
+
+    if (index === -1) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    const deleted = stadiums.splice(index, 1)[0];
+    persistStadiums();
+    res.json(deleted);
+});
 
 export default stadiumsRouter;

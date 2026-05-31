@@ -1,5 +1,6 @@
 export interface Stadium {
   id: number;
+  ownerId: number;
   name: string;
   ownerName: string;
   ownerNumber: string;
@@ -9,6 +10,7 @@ export interface Stadium {
   principalImageUrl: string;
   price: string;
   placesNum: string;
+  description?: string;
 }
 
 export interface StadiumCardProps {
