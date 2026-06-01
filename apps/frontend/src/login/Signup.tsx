@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
 import { UserRole } from '@takwira/shared';
+import { toast } from 'sonner';
 
 interface SignUpProps {
   onSignUpSuccess: () => void;
@@ -34,13 +35,31 @@ const signUpSchema = z
 type SignUpForm = z.infer<typeof signUpSchema>;
 
 export function SignUp({ onSignUpSuccess }: SignUpProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { email: '', username: '', password: '', confirmPassword: '', phoneNumber: '', role: UserRole.NormalUser },
   });
 
-  const onSubmit = (_data: SignUpForm) => {
-    onSignUpSuccess();
+  const onSubmit =  async (data: SignUpForm) => {
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to sign up');
+      }
+
+      toast.success('Account created! Welcome to the squad.');
+      onSignUpSuccess();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'An unknown error occurred');
+    }
   };
 
   return (
@@ -129,11 +148,12 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
           </fieldset>
         </div>
         <button
+          disabled={isSubmitting}
           type="submit"
-          className="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-semibold
-                     transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/30 active:scale-[0.98]"
+          className="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-semibold 
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/30 active:scale-[0.98]"
         >
-          Sign Up
+          {isSubmitting ? 'Creating account...' : 'Sign Up'}
         </button>
         <Link
           to="/"

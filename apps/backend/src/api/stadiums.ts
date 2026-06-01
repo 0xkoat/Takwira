@@ -2,15 +2,17 @@ import express, { Request, Response, Router } from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
-import { stadiums } from "../data/stadiums";
 import { Stadium } from "@takwira/shared";
 
-const STADIUMS_FILE = path.resolve(__dirname, "../data/stadiums.ts");
+const STADIUMS_FILE = path.resolve(__dirname, "../data/stadiums.json");
+
+let stadiums: Stadium[] = [];
+if (fs.existsSync(STADIUMS_FILE)) {
+    stadiums = JSON.parse(fs.readFileSync(STADIUMS_FILE, "utf-8"));
+}
 
 const persistStadiums = () => {
-    const serialised = JSON.stringify(stadiums, null, 2);
-    const content = `import { Stadium } from "@takwira/shared";\n\nexport const stadiums: Stadium[] = ${serialised};\n`;
-    fs.writeFileSync(STADIUMS_FILE, content, "utf-8");
+    fs.writeFileSync(STADIUMS_FILE, JSON.stringify(stadiums, null, 2), "utf-8");
 };
 
 const stadiumsRouter: Router = express.Router();
@@ -21,7 +23,7 @@ const parseNumericValue = (val: string) => {
     return match ? parseFloat(match[0]) : NaN;
 };
 
-// GET /api/stadiums — list all (with optional filters including ownerId)
+
 stadiumsRouter.get('/', (req: Request, res: Response) => {
     const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query;
     let filteredStadiums: Stadium[] = stadiums;
@@ -93,7 +95,7 @@ stadiumsRouter.post('/', upload.array('images'), (req: Request, res: Response) =
     res.status(201).json(newStadium);
 });
 
-// PUT /api/stadiums/:id — update an existing stadium
+
 stadiumsRouter.put('/:id', (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const index = stadiums.findIndex(s => s.id === id);
@@ -118,7 +120,6 @@ stadiumsRouter.put('/:id', (req: Request, res: Response) => {
     res.json(stadiums[index]);
 });
 
-// DELETE /api/stadiums/:id — remove a stadium
 stadiumsRouter.delete('/:id', (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const index = stadiums.findIndex(s => s.id === id);

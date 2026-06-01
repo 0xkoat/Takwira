@@ -9,28 +9,25 @@ interface LoginProps {
 }
 
 const loginSchema = z.object({
-  username: z
-    .string()
-    .min(1, 'Please enter your username.')
-    .regex(/^[A-Za-z0-9_-]+$/, 'Invalid username format.'),
+  email: z.string().email('Please enter a valid email address.'),
   password: z.string().min(1, 'Please enter your password.'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
 export function Login({ onLoginSuccess }: LoginProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { username: '', password: '' },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = (data: LoginForm) => {
-    const role = data.username.toLowerCase() === 'owner' ? UserRole.StadiumOwner : UserRole.NormalUser;
+    const role = UserRole.NormalUser;
 
     const fakeUser: UserData = {
       id: 1,
-      username: data.username,
-      email: 'robaa@siks.com',
+      username: 'User',
+      email: data.email,
       phoneNumber: '123454678',
       role,
       imageUrl: '',
@@ -45,17 +42,17 @@ export function Login({ onLoginSuccess }: LoginProps) {
       <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">Welcome back</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
-            Username
+          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+            Email
           </label>
           <input
-            type="text"
-            id="username"
-            {...register('username')}
+            type="email"
+            id="email"
+            {...register('email')}
             className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500
                        focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
           />
-          {errors.username && <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>}
+          {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
         </div>
 
         <div>
@@ -78,11 +75,12 @@ export function Login({ onLoginSuccess }: LoginProps) {
         </div>
 
         <button
+          disabled={isSubmitting}
           type="submit"
           className="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-semibold
-                     transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/30 active:scale-[0.98]"
+                     disabled:opacity-50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-900/30 active:scale-[0.98]"
         >
-          Login
+          {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
         <p className="text-center text-gray-400 text-sm">
           Don’t have an account?{' '}
