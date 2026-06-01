@@ -13,7 +13,7 @@ export function UserProfile() {
     return null;
   }
 
-  const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl' | 'id'>) => {
+  const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl' | 'id' | 'hashedPassword'>) => {
     updateUser({
       ...user,
       ...updatedData,

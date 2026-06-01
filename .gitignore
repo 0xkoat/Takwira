@@ -11,4 +11,9 @@ routeTree.gen.ts
 .postman
 postman
 tsconfig.tsbuildinfo
+*.tsbuildinfo
 .kilo
+apps/**/build
+packages/**/build
+.turbo
+coverage/

@@ -7,7 +7,8 @@ export const users: UserData[] = [
     email: "amira.benali@example.tn",
     phoneNumber: "+216 20 123 456",
     role: UserRole.NormalUser,
-    imageUrl: "https://example.com/images/users/amira.jpg"
+    imageUrl: "https://example.com/images/users/amira.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 2,
@@ -15,7 +16,8 @@ export const users: UserData[] = [
     email: "sami.kacem@example.tn",
     phoneNumber: "+216 29 234 567",
     role: UserRole.StadiumOwner,
-    imageUrl: "https://example.com/images/users/sami.jpg"
+    imageUrl: "https://example.com/images/users/sami.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 3,
@@ -23,7 +25,8 @@ export const users: UserData[] = [
     email: "manel.masmoudi@example.tn",
     phoneNumber: "+216 27 345 678",
     role: UserRole.NormalUser,
-    imageUrl: "https://example.com/images/users/manel.jpg"
+    imageUrl: "https://example.com/images/users/manel.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 4,
@@ -31,7 +34,8 @@ export const users: UserData[] = [
     email: "youssef.kharrat@example.tn",
     phoneNumber: "+216 28 456 789",
     role: UserRole.StadiumOwner,
-    imageUrl: "https://example.com/images/users/youssef.jpg"
+    imageUrl: "https://example.com/images/users/youssef.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 5,
@@ -39,7 +43,8 @@ export const users: UserData[] = [
     email: "asma.benali@example.tn",
     phoneNumber: "+216 23 567 890",
     role: UserRole.NormalUser,
-    imageUrl: "https://example.com/images/users/asma.jpg"
+    imageUrl: "https://example.com/images/users/asma.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 6,
@@ -47,7 +52,8 @@ export const users: UserData[] = [
     email: "mohamed.nafi@example.tn",
     phoneNumber: "+216 21 678 901",
     role: UserRole.StadiumOwner,
-    imageUrl: "https://example.com/images/users/mohamed.jpg"
+    imageUrl: "https://example.com/images/users/mohamed.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 7,
@@ -55,7 +61,8 @@ export const users: UserData[] = [
     email: "nour.laaroussi@example.tn",
     phoneNumber: "+216 25 789 012",
     role: UserRole.NormalUser,
-    imageUrl: "https://example.com/images/users/nour.jpg"
+    imageUrl: "https://example.com/images/users/nour.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 8,
@@ -63,7 +70,8 @@ export const users: UserData[] = [
     email: "rida.hamdi@example.tn",
     phoneNumber: "+216 26 890 123",
     role: UserRole.StadiumOwner,
-    imageUrl: "https://example.com/images/users/rida.jpg"
+    imageUrl: "https://example.com/images/users/rida.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 9,
@@ -71,7 +79,8 @@ export const users: UserData[] = [
     email: "faten.jaouadi@example.tn",
     phoneNumber: "+216 24 901 234",
     role: UserRole.NormalUser,
-    imageUrl: "https://example.com/images/users/faten.jpg"
+    imageUrl: "https://example.com/images/users/faten.jpg",
+    hashedPassword: "hashed_password"
   },
   {
     id: 10,
@@ -79,7 +88,8 @@ export const users: UserData[] = [
     email: "karim.benjannet@example.tn",
     phoneNumber: "+216 22 012 345",
     role: UserRole.StadiumOwner,
-    imageUrl: "https://example.com/images/users/karim.jpg"
+    imageUrl: "https://example.com/images/users/karim.jpg",
+    hashedPassword: "hashed_password"
   }
 ];
 

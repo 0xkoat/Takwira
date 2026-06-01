@@ -34,6 +34,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
       phoneNumber: '123454678',
       role,
       imageUrl: '',
+      hashedPassword: data.password,
     };
     onLoginSuccess(fakeUser);
    

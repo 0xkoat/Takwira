@@ -10,4 +10,5 @@ export interface UserData {
   phoneNumber: string;
   role: UserRole;
   imageUrl: string;
+  hashedPassword: string;
 }
