@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserData, UserRole } from '@takwira/shared';
+import { UserData } from '@takwira/shared';
 import { Link } from '@tanstack/react-router';
+
 
 interface LoginProps {
   onLoginSuccess: (user : UserData) => void;
@@ -16,30 +18,52 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export function Login({ onLoginSuccess }: LoginProps) {
+  const [serverError, setServerError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = (data: LoginForm) => {
-    const role = UserRole.NormalUser;
+  const onSubmit = async (data: LoginForm) => {
+    setServerError(null); 
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    const fakeUser: UserData = {
-      id: 1,
-      username: 'User',
-      email: data.email,
-      phoneNumber: '123454678',
-      role,
-      imageUrl: '',
-      hashedPassword: data.password,
-    };
-    onLoginSuccess(fakeUser);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to login');
+      }
+      const responseData = await res.json();
+      
+      if (responseData.token) {
+        localStorage.setItem('token', responseData.token);
+      }
+      
+      
+      onLoginSuccess(responseData.user);
+    } catch (error) {
+      console.error(error);
+      setServerError(error instanceof Error ? error.message : 'An unknown error occurred');
+   }
    
   };
 
   return (
     <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20">
       <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">Welcome back</h2>
+      
+      {serverError && (
+        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm text-center font-medium animate-pulse">
+          {serverError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">

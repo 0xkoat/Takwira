@@ -7,26 +7,34 @@ import { UserData, UserRole } from "@takwira/shared";
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const signUpRouter: Router = express.Router();
 
-let users: UserData[] = [];
-if (fs.existsSync(USERS_FILE)) {
-    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-}
+const getUsers = (): UserData[] => {
+    if (fs.existsSync(USERS_FILE)) {
+        try {
+            return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+        } catch (e) {
+            console.error("Error reading users file", e);
+        }
+    }
+    return [];
+};
 
 const DEFAULT_USER_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
-const persistUsers = () => { 
+const persistUsers = (users: UserData[]) => { 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
 }
 
 const saltRounds = 10;
 
-signUpRouter.post('/', (req: Request, res: Response) => { 
+signUpRouter.post('/', (req: Request, res: Response): void => { 
     const { username, email, password, confirmPassword, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
     
     if (password !== confirmPassword) {
         res.status(400).json({ error: "Passwords do not match." });
         return;
     }
+
+    const users = getUsers();
 
     const userExists = users.find(u => u.email === email);
     if (userExists) {
@@ -50,12 +58,11 @@ signUpRouter.post('/', (req: Request, res: Response) => {
         hashedPassword: hashedPassword,
     }
     users.push(newUser);
-    persistUsers();
+    persistUsers(users);
 
     const { hashedPassword: _, ...userWithoutPassword } = newUser;
     
     res.status(201).json(userWithoutPassword);
 })
-
 
 export default signUpRouter;

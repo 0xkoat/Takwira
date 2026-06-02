@@ -3,6 +3,8 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import { Stadium } from "@takwira/shared";
+import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
+import { requireOwner } from "../middlewares/requireOwner";
 
 const STADIUMS_FILE = path.resolve(__dirname, "../data/stadiums.json");
 
@@ -69,8 +71,10 @@ stadiumsRouter.get('/', (req: Request, res: Response) => {
 });
 
 
-stadiumsRouter.post('/', upload.array('images'), (req: Request, res: Response) => {
-    const { name, address, capacity, pricePerHour, description, ownerId, ownerName, ownerNumber } = req.body;
+stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), (req: AuthRequest, res: Response) => {
+    const { name, address, capacity, pricePerHour, description, ownerName, ownerNumber } = req.body;
+    
+    const ownerId = req.user?.userId;
 
     const files = (req.files as Express.Multer.File[]) ?? [];
     const imageUrls = files.map((f) => `data:${f.mimetype};base64,${f.buffer.toString('base64')}`);
@@ -96,7 +100,7 @@ stadiumsRouter.post('/', upload.array('images'), (req: Request, res: Response) =
 });
 
 
-stadiumsRouter.put('/:id', (req: Request, res: Response) => {
+stadiumsRouter.put('/:id', authMiddleware, requireOwner, (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const index = stadiums.findIndex(s => s.id === id);
 
@@ -120,7 +124,7 @@ stadiumsRouter.put('/:id', (req: Request, res: Response) => {
     res.json(stadiums[index]);
 });
 
-stadiumsRouter.delete('/:id', (req: Request, res: Response) => {
+stadiumsRouter.delete('/:id', authMiddleware, requireOwner, (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const index = stadiums.findIndex(s => s.id === id);
 
