@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { UserData } from '@takwira/shared';
 
 interface AuthContextType {
@@ -12,6 +12,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserData | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch('http://localhost:4000/api/profile/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Invalid session');
+            })
+            .then(data => setUser(data))
+            .catch(() => {
+                localStorage.removeItem('token');
+            })
+            .finally(() => setLoading(false));
+        } else {
+            setLoading(false);
+        }
+    }, []);
+
     const login = (loggedUser: UserData) => {
         setUser(loggedUser);
     };
@@ -23,6 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const updateUser = (updatedUser: UserData) => {
         setUser(updatedUser);
     };
+
+    if (loading) return null; // Avoid rendering children until auth check is done
 
     return (
         <AuthContext.Provider value={{ user, login, logout, updateUser }}>

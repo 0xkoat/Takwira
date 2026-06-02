@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,12 +36,14 @@ const signUpSchema = z
 type SignUpForm = z.infer<typeof signUpSchema>;
 
 export function SignUp({ onSignUpSuccess }: SignUpProps) {
+  const [serverError, setServerError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { email: '', username: '', password: '', confirmPassword: '', phoneNumber: '', role: UserRole.NormalUser },
   });
 
   const onSubmit =  async (data: SignUpForm) => {
+    setServerError(null);
     try {
       const res = await fetch('http://localhost:4000/api/auth/signup', {
         method: 'POST',
@@ -58,13 +61,20 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
       toast.success('Account created! Welcome to the squad.');
       onSignUpSuccess();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An unknown error occurred');
+      setServerError(error instanceof Error ? error.message : 'An unknown error occurred');
     }
   };
 
   return (
     <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20">
       <h2 className="text-2xl font-semibold text-center text-emerald-400 mb-6">Join the squad</h2>
+      
+      {serverError && (
+        <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm text-center font-medium animate-pulse">
+          {serverError}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">

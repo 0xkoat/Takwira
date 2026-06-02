@@ -18,7 +18,7 @@ const schema = z.object({
 type ProfileData = z.infer<typeof schema>;
 
 interface Profile extends ProfileData {
-  onSave: (data: ProfileData) => void;
+  onSave: (data: ProfileData) => Promise<void>;
 }
 
 type FormData = ProfileData;
@@ -31,6 +31,7 @@ export function EditCredentials({
   onSave,
 }: Profile) {
   const [isEditing, setIsEditing] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -57,14 +58,24 @@ export function EditCredentials({
     reset({ username, email, phoneNumber, role });
   };
 
-  const onSubmit = (data: FormData) => {
-    onSave(data);
-    setIsEditing(false);
+  const onSubmit = async (data: FormData) => {
+    setServerError(null);
+    try {
+      await onSave(data);
+      setIsEditing(false);
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : 'An unknown error occurred');
+    }
   };
 
   if (isEditing) {
     return (
       <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-5 animate-fadeIn">
+        {serverError && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm text-center font-medium animate-pulse">
+            {serverError}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">
             Username

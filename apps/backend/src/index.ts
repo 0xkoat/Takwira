@@ -3,6 +3,7 @@ import cors from 'cors';
 import stadiumsRouter from './api/stadiums';
 import signUpRouter from './api/signUp';
 import logInRouter from './api/logIn';
+import profileRouter from './api/profile';
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -20,6 +21,7 @@ app.get('/api/ping', (_req, res) => {
 
 app.use('/api/auth/signup', signUpRouter);
 app.use('/api/auth/login', logInRouter);
+app.use('/api/profile', profileRouter);
 
 app.use('/api/stadiums', stadiumsRouter);
 

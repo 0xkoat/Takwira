@@ -4,6 +4,7 @@ import { ProfilePhoto } from './ProfilePhoto';
 import { EditCredentials } from './EditCredentials';
 import { OwnerStadiums } from './OwnerStadiums';
 import { UserData, UserRole } from '@takwira/shared';
+import { toast } from 'sonner';
 
 export function UserProfile() {
   const navigate = useNavigate();
@@ -13,18 +14,51 @@ export function UserProfile() {
     return null;
   }
 
-  const handleCredentialsUpdate = (updatedData: Omit<UserData, 'imageUrl' | 'id' | 'hashedPassword'>) => {
-    updateUser({
-      ...user,
-      ...updatedData,
+  const handleCredentialsUpdate = async (updatedData: Omit<UserData, 'imageUrl' | 'id' | 'hashedPassword'>) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:4000/api/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedData)
     });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to update credentials');
+    }
+
+    const newUserData = await res.json();
+    updateUser(newUserData);
+    toast.success('Credentials updated successfully!');
   };
 
-  const handlePhotoUpdate = (newImageUrl: string) => {
-    updateUser({
-      ...user,
-      imageUrl: newImageUrl,
-    });
+  const handlePhotoUpdate = async (newImageUrl: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:4000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ imageUrl: newImageUrl })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update photo');
+      }
+
+      const newUserData = await res.json();
+      updateUser(newUserData);
+      toast.success('Profile photo updated successfully!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update photo');
+      throw error;
+    }
   };
 
   return (
