@@ -22,7 +22,6 @@ app.get('/api/ping', (_req, res) => {
 app.use('/api/auth/signup', signUpRouter);
 app.use('/api/auth/login', logInRouter);
 app.use('/api/profile', profileRouter);
-
 app.use('/api/stadiums', stadiumsRouter);
 
 app.listen(port, () => {

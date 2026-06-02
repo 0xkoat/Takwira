@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
     };
 
-    if (loading) return null; // Avoid rendering children until auth check is done
+    if (loading) return null;
 
     return (
         <AuthContext.Provider value={{ user, login, logout, updateUser }}>
