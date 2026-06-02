@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from "express";
+import express, { Response, Router } from "express";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcrypt";
@@ -23,7 +23,6 @@ const persistUsers = (users: UserData[]) => {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
 }
 
-// GET /api/profile/me
 profileRouter.get('/me', authMiddleware, (req: AuthRequest, res: Response): void => {
     const userId = req.user?.userId;
     const users = getUsers();
@@ -34,12 +33,10 @@ profileRouter.get('/me', authMiddleware, (req: AuthRequest, res: Response): void
         return;
     }
     
-    // Return user without password
     const { hashedPassword: _, ...userWithoutPassword } = user;
     res.status(200).json(userWithoutPassword);
 });
 
-// PUT /api/profile
 profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void => {
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
@@ -52,7 +49,6 @@ profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void =
         return;
     }
 
-    // Check if email is unique (only if they are trying to change it)
     if (email && email !== users[userIndex].email) {
         const emailExists = users.some(u => u.email === email);
         if (emailExists) {
@@ -63,18 +59,15 @@ profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void =
 
     const updatedUser = { ...users[userIndex] };
 
-    // Update basic fields
     if (username) updatedUser.username = username;
     if (email) updatedUser.email = email;
     if (imageUrl) updatedUser.imageUrl = imageUrl;
     if (phoneNumber) updatedUser.phoneNumber = phoneNumber;
     
-    // Update role securely
     if (role === 'stadium_owner' || role === 'normal_user') {
         updatedUser.role = role as UserRole;
     }
 
-    // Hash and update password if provided
     if (password) {
         const saltRounds = 10;
         updatedUser.hashedPassword = bcrypt.hashSync(password, saltRounds);
@@ -83,7 +76,6 @@ profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void =
     users[userIndex] = updatedUser;
     persistUsers(users);
 
-    // Return the updated user info without password
     const { hashedPassword: _, ...userWithoutPassword } = updatedUser;
     res.status(200).json(userWithoutPassword);
 });
