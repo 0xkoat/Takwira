@@ -59,8 +59,15 @@ export default function PostStadium() {
     const files = Array.from(data.images as FileList) as File[];
     files.forEach((f) => formData.append('images', f, f.name));
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('You must be logged in to post a stadium');
+    }
     const res = await fetch('http://localhost:4000/api/stadiums', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData,
     });
 

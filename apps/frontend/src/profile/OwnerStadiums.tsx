@@ -41,9 +41,13 @@ export function OwnerStadiums() {
 
   const saveEdit = async (data: EditForm) => {
     if (!editing) return;
+    const token = localStorage.getItem('token');
     const res = await fetch(`http://localhost:4000/api/stadiums/${editing.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(data),
     });
     if (!res.ok) return;
@@ -53,7 +57,13 @@ export function OwnerStadiums() {
   };
 
   const confirmDelete = async (id: number) => {
-    const res = await fetch(`http://localhost:4000/api/stadiums/${id}`, { method: 'DELETE' });
+    const token = localStorage.getItem('token');
+    const res = await fetch(`http://localhost:4000/api/stadiums/${id}`, { 
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!res.ok) return;
     setStadiums((prev) => prev.filter((s) => s.id !== id));
     setDeleting(null);
