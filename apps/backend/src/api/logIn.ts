@@ -1,5 +1,5 @@
 import express, { Request, Response, Router } from "express";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import bcrypt from "bcrypt";
 import { UserData } from "@takwira/shared";
@@ -12,15 +12,14 @@ if (!process.env.JWT_SECRET) {
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const logInRouter: Router = express.Router();
 
-const getUsers = (): UserData[] => {
-    if (fs.existsSync(USERS_FILE)) {
-        try {
-            return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-        } catch (e) {
-            console.error("Error reading users file", e);
-        }
+const getUsers = async (): Promise<UserData[]> => {
+    try {
+        const data = await fs.readFile(USERS_FILE, "utf-8");
+        return JSON.parse(data);
+    } catch (e) {
+        // If file doesn't exist or is invalid JSON
+        return [];
     }
-    return [];
 };
 
 logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
@@ -31,7 +30,7 @@ logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const users = getUsers();
+    const users = await getUsers();
     const user = users.find(u => u.email === email);
     
     if (!user) {
