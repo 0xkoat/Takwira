@@ -63,7 +63,7 @@ export default function PostStadium() {
     if (!token) {
       throw new Error('You must be logged in to post a stadium');
     }
-    const res = await fetch('http://localhost:4000/api/stadiums', {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

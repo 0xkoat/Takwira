@@ -25,7 +25,7 @@ export function StadiumsPage() {
     if (exactPlaces.trim()) params.append('exactPlaces', exactPlaces.trim());
 
     try {
-      const response = await fetch(`http://localhost:4000/api/stadiums?${params.toString()}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums?${params.toString()}`);
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setStadiums(data);

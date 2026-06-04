@@ -16,7 +16,7 @@ export function UserProfile() {
 
   const handleCredentialsUpdate = async (updatedData: Omit<UserData, 'imageUrl' | 'id' | 'hashedPassword'>) => {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:4000/api/profile', {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ export function UserProfile() {
   const handlePhotoUpdate = async (newImageUrl: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:4000/api/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

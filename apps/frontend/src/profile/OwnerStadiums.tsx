@@ -22,7 +22,7 @@ export function OwnerStadiums() {
 
   useEffect(() => {
     if (!user) return;
-    fetch(`http://localhost:4000/api/stadiums?ownerId=${user.id}`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums?ownerId=${user.id}`)
       .then((r) => r.json())
       .then((data) => { setStadiums(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -42,7 +42,7 @@ export function OwnerStadiums() {
   const saveEdit = async (data: EditForm) => {
     if (!editing) return;
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:4000/api/stadiums/${editing.id}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums/${editing.id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export function OwnerStadiums() {
 
   const confirmDelete = async (id: number) => {
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:4000/api/stadiums/${id}`, { 
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums/${id}`, { 
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

@@ -27,7 +27,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const onSubmit = async (data: LoginForm) => {
     setServerError(null); 
     try {
-      const res = await fetch('http://localhost:4000/api/auth/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

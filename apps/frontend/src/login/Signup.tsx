@@ -45,7 +45,7 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
   const onSubmit =  async (data: SignUpForm) => {
     setServerError(null);
     try {
-      const res = await fetch('http://localhost:4000/api/auth/signup', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
