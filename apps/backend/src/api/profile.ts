@@ -37,7 +37,7 @@ profileRouter.get('/me', authMiddleware, (req: AuthRequest, res: Response): void
     res.status(200).json(userWithoutPassword);
 });
 
-profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void => {
+profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
     
@@ -70,7 +70,7 @@ profileRouter.put('/', authMiddleware, (req: AuthRequest, res: Response): void =
 
     if (password) {
         const saltRounds = 10;
-        updatedUser.hashedPassword = bcrypt.hashSync(password, saltRounds);
+        updatedUser.hashedPassword = await bcrypt.hash(password, saltRounds);
     }
 
     users[userIndex] = updatedUser;

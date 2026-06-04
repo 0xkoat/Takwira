@@ -26,7 +26,7 @@ const persistUsers = (users: UserData[]) => {
 
 const saltRounds = 10;
 
-signUpRouter.post('/', (req: Request, res: Response): void => { 
+signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => { 
     const { username, email, password, confirmPassword, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
     
     if (password !== confirmPassword) {
@@ -46,7 +46,7 @@ signUpRouter.post('/', (req: Request, res: Response): void => {
     const nextId = lastId + 1;
 
     const imageUrl = providedImageUrl || DEFAULT_USER_IMAGE;
-    const hashedPassword = bcrypt.hashSync(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const newUser: UserData = {
         id: nextId,

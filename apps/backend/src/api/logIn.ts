@@ -4,13 +4,9 @@ import path from "path";
 import bcrypt from "bcrypt";
 import { UserData } from "@takwira/shared";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 
-dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
-const jwtSecret = process.env.JWT_SECRET;
-
-if (!jwtSecret) {
-    console.error("WARNING: JWT_SECRET environment variable is not defined!");
+if (!process.env.JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined. The application cannot start safely.");
 }
 
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
@@ -27,7 +23,7 @@ const getUsers = (): UserData[] => {
     return [];
 };
 
-logInRouter.post('/', (req: Request, res: Response): void => {
+logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -43,16 +39,15 @@ logInRouter.post('/', (req: Request, res: Response): void => {
         return;
     }
     
-    const isPasswordValid = bcrypt.compareSync(password, user.hashedPassword);
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
     if (!isPasswordValid) {
         res.status(401).json({ error: "Invalid email or password" });
         return;
     }
 
-    const secret = jwtSecret || 'fallback_secret';
     const token = jwt.sign(
         { userId: user.id, role: user.role }, 
-        secret, 
+        process.env.JWT_SECRET as string, 
         { expiresIn: '15min' } 
     );
 
