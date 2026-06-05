@@ -4,6 +4,11 @@ import path from "path";
 import bcrypt from "bcrypt";
 import { UserRole, UserWithPassword } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
+import jwt from "jsonwebtoken";
+
+if (!process.env.JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined.");
+}
 
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const profileRouter: Router = express.Router();
@@ -82,8 +87,17 @@ profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): 
     users[userIndex] = updatedUser;
     persistUsers(users);
 
+    const token = jwt.sign(
+        { userId: updatedUser.id, role: updatedUser.role },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '15min' }
+    );
+
     const { hashedPassword: _, ...userWithoutPassword } = updatedUser;
-    res.status(200).json(userWithoutPassword);
+    res.status(200).json({
+        token,
+        user: userWithoutPassword
+    });
 });
 
 export default profileRouter;
