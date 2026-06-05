@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            fetch('http://localhost:4000/api/profile/me', {
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => {
@@ -59,9 +59,8 @@ export function useAuth() {
     const context = useContext(AuthContext);
 
     if (!context) {
-        throw new Error('error');
+        throw new Error('useAuth must be used within an AuthProvider');
     }
 
     return context;
 }
-
