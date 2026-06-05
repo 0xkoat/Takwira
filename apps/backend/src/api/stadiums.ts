@@ -79,8 +79,11 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), (
     const files = (req.files as Express.Multer.File[]) ?? [];
     const imageUrls = files.map((f) => `data:${f.mimetype};base64,${f.buffer.toString('base64')}`);
 
+    const lastId = stadiums.length > 0 ? Math.max(...stadiums.map(s => s.id)) : 0;
+    const nextId = lastId + 1;
+
     const newStadium: Stadium = {
-        id: stadiums.length + 1,
+        id: nextId,
         ownerId: parseInt(ownerId) || 0,
         name,
         ownerName: ownerName ?? 'Unknown',
