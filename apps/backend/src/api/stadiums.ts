@@ -20,12 +20,6 @@ const persistStadiums = () => {
 const stadiumsRouter: Router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-const parseNumericValue = (val: string) => {
-    const match = val.match(/(\d+(\.\d+)?)/);
-    return match ? parseFloat(match[0]) : NaN;
-};
-
-
 stadiumsRouter.get('/', (req: Request, res: Response) => {
     const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query;
     let filteredStadiums: Stadium[] = stadiums;
@@ -45,14 +39,14 @@ stadiumsRouter.get('/', (req: Request, res: Response) => {
     if (typeof minPrice === 'string' && minPrice.trim()) {
         const parsedMin = parseFloat(minPrice);
         if (!isNaN(parsedMin)) {
-            filteredStadiums = filteredStadiums.filter(s => parseNumericValue(s.price) >= parsedMin);
+            filteredStadiums = filteredStadiums.filter(s => s.price >= parsedMin);
         }
     }
 
     if (typeof maxPrice === 'string' && maxPrice.trim()) {
         const parsedMax = parseFloat(maxPrice);
         if (!isNaN(parsedMax)) {
-            filteredStadiums = filteredStadiums.filter(s => parseNumericValue(s.price) <= parsedMax);
+            filteredStadiums = filteredStadiums.filter(s => s.price <= parsedMax);
         }
     }
 
@@ -61,8 +55,7 @@ stadiumsRouter.get('/', (req: Request, res: Response) => {
         const parsedPlaces = parseInt(exactPlacesVal);
         if (!isNaN(parsedPlaces)) {
             filteredStadiums = filteredStadiums.filter(stadium => {
-                const placesNum = parseInt(stadium.placesNum);
-                return !isNaN(placesNum) && placesNum === parsedPlaces;
+                return stadium.placesNum === parsedPlaces;
             });
         }
     }
@@ -82,18 +75,26 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), (
     const lastId = stadiums.length > 0 ? Math.max(...stadiums.map(s => s.id)) : 0;
     const nextId = lastId + 1;
 
+    let cleanedOwnerNumber = String(ownerNumber).replace(/\D/g, '');
+    if (cleanedOwnerNumber.startsWith('216') && cleanedOwnerNumber.length > 8) {
+        cleanedOwnerNumber = cleanedOwnerNumber.substring(3);
+    }
+    const parsedOwnerNumber = parseInt(cleanedOwnerNumber) || 0;
+    const parsedPrice = parseFloat(pricePerHour) || 0;
+    const parsedCapacity = parseInt(capacity) || 0;
+
     const newStadium: Stadium = {
         id: nextId,
         ownerId: parseInt(ownerId) || 0,
         name,
         ownerName: ownerName ?? 'Unknown',
-        ownerNumber: ownerNumber ?? 'Unknown',
+        ownerNumber: parsedOwnerNumber,
         city: address,
         locationURL: '',
         images: imageUrls,
         principalImageUrl: imageUrls[0] ?? '',
-        price: `${pricePerHour} TND/hour`,
-        placesNum: String(capacity),
+        price: parsedPrice,
+        placesNum: parsedCapacity,
         description: description ?? '',
     };
 
@@ -118,8 +119,8 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, (req: AuthRequest, res:
         ...stadiums[index],
         name: name ?? stadiums[index].name,
         city: address ?? stadiums[index].city,
-        placesNum: capacity ? String(capacity) : stadiums[index].placesNum,
-        price: pricePerHour ? `${pricePerHour} TND/hour` : stadiums[index].price,
+        placesNum: capacity ? (parseInt(capacity) || stadiums[index].placesNum) : stadiums[index].placesNum,
+        price: pricePerHour ? (parseFloat(pricePerHour) || stadiums[index].price) : stadiums[index].price,
         description: description ?? stadiums[index].description,
     };
 

@@ -15,7 +15,13 @@ const stadiumSchema = z.object({
   address: z.string().min(5, 'Address is too short.'),
   capacity: z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), z.number().int().positive('Capacity must be a positive integer')),
   pricePerHour: z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), z.number().nonnegative('Price must be a non-negative number')),
-  description: z.string().min(10, 'Provide a short description').max(1000).optional(),
+  description: z
+    .string()
+    .max(1000)
+    .refine((val) => val === '' || val.length >= 10, {
+      message: 'Description must be at least 10 characters.',
+    })
+    .optional(),
   images: z.any()
     .refine((files) => files && (files as FileList).length > 0, 'At least one image is required.')
     .refine((files) => {
@@ -53,7 +59,7 @@ export default function PostStadium() {
     if (user) {
       formData.append('ownerId', String(user.id));
       formData.append('ownerName', user.username);
-      formData.append('ownerNumber', user.phoneNumber);
+      formData.append('ownerNumber', String(user.phoneNumber));
     }
 
     const files = Array.from(data.images as FileList) as File[];

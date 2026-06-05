@@ -11,7 +11,14 @@ const schema = z.object({
     .max(30)
     .regex(/^[A-Za-z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, underscores.'),
   email: z.string().email('Please enter a valid email address.'),
-  phoneNumber: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, 'Please enter a valid phone number.'),
+  phoneNumber: z.preprocess((v) => {
+    if (typeof v !== 'string') return v;
+    let cleaned = v.replace(/\D/g, '');
+    if (cleaned.startsWith('216') && cleaned.length > 8) {
+      cleaned = cleaned.substring(3);
+    }
+    return cleaned === '' ? undefined : parseInt(cleaned) || v;
+  }, z.number().int().min(10000000, 'Phone number must be exactly 8 digits.').max(99999999, 'Phone number must be exactly 8 digits.')),
   role: z.nativeEnum(UserRole),
 });
 

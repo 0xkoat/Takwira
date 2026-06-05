@@ -24,8 +24,15 @@ const signUpSchema = z
       .regex(/(?=.*[A-Z])/, 'Password must contain an uppercase letter.')
       .regex(/(?=.*\d)/, 'Password must contain a number.')
       .regex(/(?=.*\W)/, 'Password must contain a symbol.'),
+    phoneNumber: z.preprocess((v) => {
+      if (typeof v !== 'string') return v;
+      let cleaned = v.replace(/\D/g, '');
+      if (cleaned.startsWith('216') && cleaned.length > 8) {
+        cleaned = cleaned.substring(3);
+      }
+      return cleaned === '' ? undefined : parseInt(cleaned) || v;
+    }, z.number().int().min(10000000, 'Phone number must be exactly 8 digits.').max(99999999, 'Phone number must be exactly 8 digits.')),
     confirmPassword: z.string(),
-    phoneNumber: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, 'Please enter a valid phone number.'),
     role: z.nativeEnum(UserRole),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -39,7 +46,7 @@ export function SignUp({ onSignUpSuccess }: SignUpProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { email: '', username: '', password: '', confirmPassword: '', phoneNumber: '', role: UserRole.NormalUser },
+    defaultValues: { email: '', username: '', password: '', confirmPassword: '', phoneNumber: '' as any, role: UserRole.NormalUser },
   });
 
   const onSubmit =  async (data: SignUpForm) => {

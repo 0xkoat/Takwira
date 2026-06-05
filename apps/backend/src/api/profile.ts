@@ -62,7 +62,13 @@ profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): 
     if (username) updatedUser.username = username;
     if (email) updatedUser.email = email;
     if (imageUrl) updatedUser.imageUrl = imageUrl;
-    if (phoneNumber) updatedUser.phoneNumber = phoneNumber;
+    if (phoneNumber) {
+        let cleanedPhoneNumber = String(phoneNumber).replace(/\D/g, '');
+        if (cleanedPhoneNumber.startsWith('216') && cleanedPhoneNumber.length > 8) {
+            cleanedPhoneNumber = cleanedPhoneNumber.substring(3);
+        }
+        updatedUser.phoneNumber = parseInt(cleanedPhoneNumber) || 0;
+    }
     
     if (role === 'stadium_owner' || role === 'normal_user') {
         updatedUser.role = role as UserRole;

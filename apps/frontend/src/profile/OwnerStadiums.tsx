@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 type EditForm = {
   name: string;
   address: string;
-  capacity: string;
-  pricePerHour: string;
+  capacity: number;
+  pricePerHour: number;
   description: string;
 };
 
@@ -34,7 +34,7 @@ export function OwnerStadiums() {
       name: stadium.name,
       address: stadium.city,
       capacity: stadium.placesNum,
-      pricePerHour: stadium.price.replace(' TND/hour', ''),
+      pricePerHour: stadium.price,
       description: stadium.description ?? '',
     });
   };
@@ -98,7 +98,7 @@ export function OwnerStadiums() {
             >
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium truncate">{stadium.name}</p>
-                <p className="text-gray-400 text-sm">{stadium.city} · {stadium.price} · {stadium.placesNum} places</p>
+                <p className="text-gray-400 text-sm">{stadium.city} · {stadium.price} TND/hour · {stadium.placesNum} places</p>
                 {stadium.description && (
                   <p className="text-gray-500 text-xs mt-1 line-clamp-1">{stadium.description}</p>
                 )}
@@ -139,11 +139,11 @@ export function OwnerStadiums() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Capacity</label>
-                  <input type="number" {...register('capacity')} className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm" />
+                  <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">Price / hour (TND)</label>
-                  <input type="number" step="0.01" {...register('pricePerHour')} className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm" />
+                  <input type="number" step="0.01" {...register('pricePerHour', { valueAsNumber: true })} className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm" />
                 </div>
               </div>
               <div>

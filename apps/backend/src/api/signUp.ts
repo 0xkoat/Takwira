@@ -48,11 +48,17 @@ signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     const imageUrl = providedImageUrl || DEFAULT_USER_IMAGE;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    let cleanedPhoneNumber = String(phoneNumber).replace(/\D/g, '');
+    if (cleanedPhoneNumber.startsWith('216') && cleanedPhoneNumber.length > 8) {
+        cleanedPhoneNumber = cleanedPhoneNumber.substring(3);
+    }
+    const parsedPhoneNumber = parseInt(cleanedPhoneNumber) || 0;
+
     const newUser: UserData = {
         id: nextId,
         username,
         email,
-        phoneNumber,
+        phoneNumber: parsedPhoneNumber,
         role: role as UserRole,
         imageUrl,
         hashedPassword: hashedPassword,

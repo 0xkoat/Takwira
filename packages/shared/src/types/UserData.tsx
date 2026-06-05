@@ -7,7 +7,7 @@ export interface UserData {
   id: number;
   username: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber: number;
   role: UserRole;
   imageUrl: string;
   hashedPassword: string;

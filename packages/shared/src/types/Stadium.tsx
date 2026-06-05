@@ -3,13 +3,13 @@ export interface Stadium {
   ownerId: number;
   name: string;
   ownerName: string;
-  ownerNumber: string;
+  ownerNumber: number;
   city: string;
   locationURL: string;
   images: string[];
   principalImageUrl: string;
-  price: string;
-  placesNum: string;
+  price: number;
+  placesNum: number;
   description?: string;
 }
 
