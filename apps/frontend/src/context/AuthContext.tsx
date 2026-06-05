@@ -3,9 +3,9 @@ import { UserData } from '@takwira/shared';
 
 interface AuthContextType {
     user: UserData | null;
-    login: (user: UserData) => void;
+    login: (user: UserData, token: string) => void;
     logout: () => void;
-    updateUser: (user: UserData) => void;
+    updateUser: (user: UserData, token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,15 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const login = (loggedUser: UserData) => {
+    const login = (loggedUser: UserData, token: string) => {
+        localStorage.setItem('token', token);
         setUser(loggedUser);
     };
 
     const logout = () => {
+        localStorage.removeItem('token');
         setUser(null);
     };
 
-    const updateUser = (updatedUser: UserData) => {
+    const updateUser = (updatedUser: UserData, token: string) => {
+        localStorage.setItem('token', token);
         setUser(updatedUser);
     };
 
