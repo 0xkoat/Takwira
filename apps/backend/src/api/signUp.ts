@@ -2,12 +2,12 @@ import express, { Request, Response, Router } from "express";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcrypt";
-import { UserData, UserRole } from "@takwira/shared";
+import { UserRole, UserWithPassword } from "@takwira/shared";
 
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const signUpRouter: Router = express.Router();
 
-const getUsers = (): UserData[] => {
+const getUsers = (): UserWithPassword[] => {
     if (fs.existsSync(USERS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
@@ -20,7 +20,7 @@ const getUsers = (): UserData[] => {
 
 const DEFAULT_USER_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
-const persistUsers = (users: UserData[]) => { 
+const persistUsers = (users: UserWithPassword[]) => { 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
 }
 
@@ -54,7 +54,7 @@ signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     }
     const parsedPhoneNumber = parseInt(cleanedPhoneNumber) || 0;
 
-    const newUser: UserData = {
+    const newUser: UserWithPassword = {
         id: nextId,
         username,
         email,

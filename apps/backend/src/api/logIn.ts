@@ -2,7 +2,7 @@ import express, { Request, Response, Router } from "express";
 import fs from "fs/promises";
 import path from "path";
 import bcrypt from "bcrypt";
-import { UserData } from "@takwira/shared";
+import { UserWithPassword } from "@takwira/shared";
 import jwt from "jsonwebtoken";
 
 if (!process.env.JWT_SECRET) {
@@ -12,7 +12,7 @@ if (!process.env.JWT_SECRET) {
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const logInRouter: Router = express.Router();
 
-const getUsers = async (): Promise<UserData[]> => {
+const getUsers = async (): Promise<UserWithPassword[]> => {
     try {
         const data = await fs.readFile(USERS_FILE, "utf-8");
         return JSON.parse(data);

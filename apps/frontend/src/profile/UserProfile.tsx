@@ -14,7 +14,7 @@ export function UserProfile() {
     return null;
   }
 
-  const handleCredentialsUpdate = async (updatedData: Omit<UserData, 'imageUrl' | 'id' | 'hashedPassword'>) => {
+  const handleCredentialsUpdate = async (updatedData: Omit<UserData, 'imageUrl' | 'id'>) => {
     const token = localStorage.getItem('token');
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
       method: 'PUT',

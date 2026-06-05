@@ -10,5 +10,8 @@ export interface UserData {
   phoneNumber: number;
   role: UserRole;
   imageUrl: string;
+}
+
+export interface UserWithPassword extends UserData {
   hashedPassword: string;
 }

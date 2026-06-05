@@ -2,13 +2,13 @@ import express, { Response, Router } from "express";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcrypt";
-import { UserData, UserRole } from "@takwira/shared";
+import { UserRole, UserWithPassword } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
 
 const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const profileRouter: Router = express.Router();
 
-const getUsers = (): UserData[] => {
+const getUsers = (): UserWithPassword[] => {
     if (fs.existsSync(USERS_FILE)) {
         try {
             return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
@@ -19,7 +19,7 @@ const getUsers = (): UserData[] => {
     return [];
 };
 
-const persistUsers = (users: UserData[]) => { 
+const persistUsers = (users: UserWithPassword[]) => { 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
 }
 
