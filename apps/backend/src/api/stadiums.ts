@@ -11,6 +11,16 @@ import { validate } from "../middlewares/validateMiddleware";
 const stadiumsRouter: Router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+const getStadiumsSchema = z.object({
+    query: z.object({
+        city: z.string().optional(),
+        minPrice: z.coerce.number().optional(),
+        maxPrice: z.coerce.number().optional(),
+        exactPlaces: z.coerce.number().int().optional(),
+        ownerId: z.coerce.number().int().optional(),
+    }),
+});
+
 const createStadiumSchema = z.object({
     body: z.object({
         name: z.string().min(3, "Stadium name must be at least 3 characters"),
@@ -33,45 +43,36 @@ const updateStadiumSchema = z.object({
     }),
 });
 
-stadiumsRouter.get('/', async (req: Request, res: Response) => {
-    const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query;
+const stadiumIdSchema = z.object({
+    params: z.object({
+        id: z.coerce.number().int().positive("Invalid stadium ID"),
+    }),
+});
+
+stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: Response) => {
+    const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query as any;
     const stadiums = await getStadiums();
     let filteredStadiums: Stadium[] = stadiums;
 
-    if (typeof ownerId === 'string' && ownerId.trim()) {
-        const parsed = parseInt(ownerId);
-        if (!isNaN(parsed)) {
-            filteredStadiums = filteredStadiums.filter(s => s.ownerId === parsed);
-        }
+    if (ownerId !== undefined) {
+        filteredStadiums = filteredStadiums.filter(s => s.ownerId === ownerId);
     }
 
-    if (typeof city === 'string' && city.trim()) {
+    if (city) {
         const cityFilter = city.trim().toLowerCase();
         filteredStadiums = filteredStadiums.filter(s => s.city.toLowerCase().includes(cityFilter));
     }
 
-    if (typeof minPrice === 'string' && minPrice.trim()) {
-        const parsedMin = parseFloat(minPrice);
-        if (!isNaN(parsedMin)) {
-            filteredStadiums = filteredStadiums.filter(s => s.price >= parsedMin);
-        }
+    if (minPrice !== undefined) {
+        filteredStadiums = filteredStadiums.filter(s => s.price >= minPrice);
     }
 
-    if (typeof maxPrice === 'string' && maxPrice.trim()) {
-        const parsedMax = parseFloat(maxPrice);
-        if (!isNaN(parsedMax)) {
-            filteredStadiums = filteredStadiums.filter(s => s.price <= parsedMax);
-        }
+    if (maxPrice !== undefined) {
+        filteredStadiums = filteredStadiums.filter(s => s.price <= maxPrice);
     }
 
-    const exactPlacesVal = typeof exactPlaces === 'string' ? exactPlaces.trim() : null;
-    if (exactPlacesVal) {
-        const parsedPlaces = parseInt(exactPlacesVal);
-        if (!isNaN(parsedPlaces)) {
-            filteredStadiums = filteredStadiums.filter(stadium => {
-                return stadium.placesNum === parsedPlaces;
-            });
-        }
+    if (exactPlaces !== undefined) {
+        filteredStadiums = filteredStadiums.filter(s => s.placesNum === exactPlaces);
     }
 
     res.json(filteredStadiums);
@@ -111,8 +112,8 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), v
 });
 
 
-stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(updateStadiumSchema), async (req: AuthRequest, res: Response) => {
-    const id = parseInt(req.params.id);
+stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), validate(updateStadiumSchema), async (req: AuthRequest, res: Response) => {
+    const id = (req.params as any).id;
     const stadiums = await getStadiums();
     const index = stadiums.findIndex(s => s.id === id);
 
@@ -141,8 +142,8 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(updateStadiumS
     res.json(stadiums[index]);
 });
 
-stadiumsRouter.delete('/:id', authMiddleware, requireOwner, async (req: AuthRequest, res: Response) => {
-    const id = parseInt(req.params.id);
+stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), async (req: AuthRequest, res: Response) => {
+    const id = (req.params as any).id;
     const stadiums = await getStadiums();
     const index = stadiums.findIndex(s => s.id === id);
 
