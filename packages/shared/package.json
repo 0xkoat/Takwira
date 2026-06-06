@@ -1,0 +1,27 @@
+{
+  "name": "@takwira/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:all": "pnpm build && pnpm build:cjs"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
