@@ -1,36 +1,16 @@
 import express, { Response, Router } from "express";
-import fs from "fs";
-import path from "path";
-import bcrypt from "bcrypt";
-import { UserRole, UserWithPassword } from "@takwira/shared";
+import { UserRole } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
-import jwt from "jsonwebtoken";
+import { getUsers, persistUsers } from "../utils/userStore";
+import { normalizePhoneNumber } from "../utils/phoneUtils"
+import { hashPassword, signToken } from "../utils/authUtils";
+import { sanitizeUser } from "../utils/userUtils";
 
-if (!process.env.JWT_SECRET) {
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined.");
-}
-
-const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const profileRouter: Router = express.Router();
 
-const getUsers = (): UserWithPassword[] => {
-    if (fs.existsSync(USERS_FILE)) {
-        try {
-            return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-        } catch (e) {
-            console.error("Error reading users file", e);
-        }
-    }
-    return [];
-};
-
-const persistUsers = (users: UserWithPassword[]) => { 
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
-}
-
-profileRouter.get('/me', authMiddleware, (req: AuthRequest, res: Response): void => {
+profileRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
-    const users = getUsers();
+    const users = await getUsers();
     
     const user = users.find(u => u.id === userId);
     if (!user) {
@@ -38,15 +18,14 @@ profileRouter.get('/me', authMiddleware, (req: AuthRequest, res: Response): void
         return;
     }
     
-    const { hashedPassword: _, ...userWithoutPassword } = user;
-    res.status(200).json(userWithoutPassword);
+    res.status(200).json(sanitizeUser(user));
 });
 
 profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
     
-    const users = getUsers();
+    const users = await getUsers();
     const userIndex = users.findIndex(u => u.id === userId);
     
     if (userIndex === -1) {
@@ -67,37 +46,22 @@ profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): 
     if (username) updatedUser.username = username;
     if (email) updatedUser.email = email;
     if (imageUrl) updatedUser.imageUrl = imageUrl;
-    if (phoneNumber) {
-        let cleanedPhoneNumber = String(phoneNumber).replace(/\D/g, '');
-        if (cleanedPhoneNumber.startsWith('216') && cleanedPhoneNumber.length > 8) {
-            cleanedPhoneNumber = cleanedPhoneNumber.substring(3);
-        }
-        updatedUser.phoneNumber = parseInt(cleanedPhoneNumber) || 0;
-    }
+    if (phoneNumber) updatedUser.phoneNumber = normalizePhoneNumber(phoneNumber);
     
     if (role === 'stadium_owner' || role === 'normal_user') {
         updatedUser.role = role as UserRole;
     }
 
     if (password) {
-        const saltRounds = 10;
-        updatedUser.hashedPassword = await bcrypt.hash(password, saltRounds);
+        updatedUser.hashedPassword = await hashPassword(password);
     }
 
     users[userIndex] = updatedUser;
-    persistUsers(users);
+    await persistUsers(users);
 
-    const token = jwt.sign(
-        { userId: updatedUser.id, role: updatedUser.role },
-        process.env.JWT_SECRET as string,
-        { expiresIn: '15min' }
-    );
+    const token = signToken(updatedUser);
 
-    const { hashedPassword: _, ...userWithoutPassword } = updatedUser;
-    res.status(200).json({
-        token,
-        user: userWithoutPassword
-    });
+    res.status(200).json({ token, user: sanitizeUser(updatedUser) });
 });
 
 export default profileRouter;

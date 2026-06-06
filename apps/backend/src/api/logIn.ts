@@ -1,26 +1,9 @@
 import express, { Request, Response, Router } from "express";
-import fs from "fs/promises";
-import path from "path";
-import bcrypt from "bcrypt";
-import { UserWithPassword } from "@takwira/shared";
-import jwt from "jsonwebtoken";
+import { getUsers } from "../utils/userStore";
+import { comparePassword, signToken } from "../utils/authUtils";
+import { sanitizeUser } from "../utils/userUtils";
 
-if (!process.env.JWT_SECRET) {
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined. The application cannot start safely.");
-}
-
-const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const logInRouter: Router = express.Router();
-
-const getUsers = async (): Promise<UserWithPassword[]> => {
-    try {
-        const data = await fs.readFile(USERS_FILE, "utf-8");
-        return JSON.parse(data);
-    } catch (e) {
-        // If file doesn't exist or is invalid JSON
-        return [];
-    }
-};
 
 logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
@@ -38,22 +21,17 @@ logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
         return;
     }
     
-    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+    const isPasswordValid = await comparePassword(password, user.hashedPassword);
     if (!isPasswordValid) {
         res.status(401).json({ error: "Invalid email or password" });
         return;
     }
 
-    const token = jwt.sign(
-        { userId: user.id, role: user.role }, 
-        process.env.JWT_SECRET as string, 
-        { expiresIn: '15min' } 
-    );
+    const token = signToken(user);
 
-    const { hashedPassword: _, ...userWithoutPassword } = user;
     res.status(200).json({ 
         token,
-        user: userWithoutPassword
+        user: sanitizeUser(user)
     });
 });
 

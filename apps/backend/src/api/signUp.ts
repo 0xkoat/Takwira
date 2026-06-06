@@ -1,30 +1,12 @@
 import express, { Request, Response, Router } from "express";
-import fs from "fs";
-import path from "path";
-import bcrypt from "bcrypt";
 import { UserRole, UserWithPassword } from "@takwira/shared";
+import { getUsers, persistUsers } from "../utils/userStore";
+import { normalizePhoneNumber } from "../utils/phoneUtils";
+import { hashPassword } from "../utils/authUtils";
+import { sanitizeUser } from "../utils/userUtils";
 
-const USERS_FILE = path.resolve(__dirname, "../data/users.json");
 const signUpRouter: Router = express.Router();
-
-const getUsers = (): UserWithPassword[] => {
-    if (fs.existsSync(USERS_FILE)) {
-        try {
-            return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
-        } catch (e) {
-            console.error("Error reading users file", e);
-        }
-    }
-    return [];
-};
-
 const DEFAULT_USER_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
-
-const persistUsers = (users: UserWithPassword[]) => { 
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf-8");
-}
-
-const saltRounds = 10;
 
 signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => { 
     const { username, email, password, confirmPassword, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
@@ -34,7 +16,7 @@ signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const users = getUsers();
+    const users = await getUsers();
 
     const userExists = users.find(u => u.email === email);
     if (userExists) {
@@ -46,29 +28,21 @@ signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     const nextId = lastId + 1;
 
     const imageUrl = providedImageUrl || DEFAULT_USER_IMAGE;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    let cleanedPhoneNumber = String(phoneNumber).replace(/\D/g, '');
-    if (cleanedPhoneNumber.startsWith('216') && cleanedPhoneNumber.length > 8) {
-        cleanedPhoneNumber = cleanedPhoneNumber.substring(3);
-    }
-    const parsedPhoneNumber = parseInt(cleanedPhoneNumber) || 0;
+    const hashedPassword = await hashPassword(password);
 
     const newUser: UserWithPassword = {
         id: nextId,
         username,
         email,
-        phoneNumber: parsedPhoneNumber,
+        phoneNumber: normalizePhoneNumber(phoneNumber),
         role: role as UserRole,
         imageUrl,
         hashedPassword: hashedPassword,
     }
     users.push(newUser);
-    persistUsers(users);
+    await persistUsers(users);
 
-    const { hashedPassword: _, ...userWithoutPassword } = newUser;
-    
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json(sanitizeUser(newUser));
 })
 
 export default signUpRouter;
