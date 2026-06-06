@@ -1,14 +1,37 @@
 import express, { Request, Response, Router } from "express";
 import multer from "multer";
+import { z } from "zod";
 import { Stadium } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
 import { requireOwner } from "../middlewares/requireOwner";
 import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { getStadiums, persistStadiums } from "../utils/stadiumStore";
-
+import { validate } from "../middlewares/validateMiddleware";
 
 const stadiumsRouter: Router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+const createStadiumSchema = z.object({
+    body: z.object({
+        name: z.string().min(3, "Stadium name must be at least 3 characters"),
+        address: z.string().min(5, "Address is too short"),
+        capacity: z.coerce.number().int().positive("Capacity must be a positive integer"),
+        pricePerHour: z.coerce.number().nonnegative("Price must be a non-negative number"),
+        description: z.string().max(1000).optional(),
+        ownerName: z.string().optional(),
+        ownerNumber: z.any().optional(),
+    }),
+});
+
+const updateStadiumSchema = z.object({
+    body: z.object({
+        name: z.string().min(3, "Stadium name must be at least 3 characters").optional(),
+        address: z.string().min(5, "Address is too short").optional(),
+        capacity: z.coerce.number().int().positive("Capacity must be a positive integer").optional(),
+        pricePerHour: z.coerce.number().nonnegative("Price must be a non-negative number").optional(),
+        description: z.string().max(1000).optional(),
+    }),
+});
 
 stadiumsRouter.get('/', async (req: Request, res: Response) => {
     const { city, minPrice, maxPrice, exactPlaces, ownerId } = req.query;
@@ -55,7 +78,7 @@ stadiumsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 
-stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), async (req: AuthRequest, res: Response) => {
+stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), validate(createStadiumSchema), async (req: AuthRequest, res: Response) => {
     const { name, address, capacity, pricePerHour, description, ownerName, ownerNumber } = req.body;
     
     const ownerId = req.user?.userId;
@@ -66,8 +89,6 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), a
 
     const lastId = stadiums.length > 0 ? Math.max(...stadiums.map(s => s.id)) : 0;
     const nextId = lastId + 1;
-    const parsedPrice = parseFloat(pricePerHour) || 0;
-    const parsedCapacity = parseInt(capacity) || 0;
 
     const newStadium: Stadium = {
         id: nextId,
@@ -79,8 +100,8 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), a
         locationURL: '',
         images: imageUrls,
         principalImageUrl: imageUrls[0] ?? '',
-        price: parsedPrice,
-        placesNum: parsedCapacity,
+        price: pricePerHour,
+        placesNum: capacity,
         description: description ?? '',
     };
 
@@ -90,7 +111,7 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), a
 });
 
 
-stadiumsRouter.put('/:id', authMiddleware, requireOwner, async (req: AuthRequest, res: Response) => {
+stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(updateStadiumSchema), async (req: AuthRequest, res: Response) => {
     const id = parseInt(req.params.id);
     const stadiums = await getStadiums();
     const index = stadiums.findIndex(s => s.id === id);
@@ -106,8 +127,8 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, async (req: AuthRequest
         ...stadiums[index],
         name: name ?? stadiums[index].name,
         city: address ?? stadiums[index].city,
-        placesNum: capacity ? (parseInt(capacity) || stadiums[index].placesNum) : stadiums[index].placesNum,
-        price: pricePerHour ? (parseFloat(pricePerHour) || stadiums[index].price) : stadiums[index].price,
+        placesNum: capacity ?? stadiums[index].placesNum,
+        price: pricePerHour ?? stadiums[index].price,
         description: description ?? stadiums[index].description,
     };
 
