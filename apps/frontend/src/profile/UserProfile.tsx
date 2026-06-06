@@ -31,7 +31,7 @@ export function UserProfile() {
     }
 
     const newUserData = await res.json();
-    updateUser(newUserData);
+    updateUser(newUserData.user, newUserData.token);
     toast.success('Credentials updated successfully!');
   };
 
@@ -53,7 +53,7 @@ export function UserProfile() {
       }
 
       const newUserData = await res.json();
-      updateUser(newUserData);
+      updateUser(newUserData.user, newUserData.token);
       toast.success('Profile photo updated successfully!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to update photo');

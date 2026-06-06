@@ -1,17 +1,21 @@
 import express, { Request, Response, Router } from "express";
+import { z } from "zod";
 import { getUsers } from "../utils/userStore";
 import { comparePassword, signToken } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
+import { validate } from "../middlewares/validateMiddleware";
 
 const logInRouter: Router = express.Router();
 
-logInRouter.post('/', async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
+const logInSchema = z.object({
+    body: z.object({
+        email: z.string().email("Invalid email address"),
+        password: z.string().min(8, "Password is required"),
+    }),
+});
 
-    if (!email || !password) {
-        res.status(400).json({ error: "Email and password are required" });
-        return;
-    }
+logInRouter.post('/', validate(logInSchema), async (req: Request, res: Response): Promise<void> => {
+    const { email, password } = req.body;
 
     const users = await getUsers();
     const user = users.find(u => u.email === email);

@@ -31,6 +31,9 @@ importers:
       multer:
         specifier: ^2.1.1
         version: 2.1.1
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/bcrypt':
         specifier: ^6.0.0

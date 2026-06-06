@@ -1,11 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import path from 'path';
-
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
-const jwtSecret = process.env.JWT_SECRET;
-
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -20,6 +14,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     const token = authHeader.split(' ')[1];
+    const jwtSecret = process.env.JWT_SECRET;
 
     if (!jwtSecret) {
         res.status(500).json({ error: 'Server configuration error: JWT_SECRET missing' });

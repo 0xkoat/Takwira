@@ -1,6 +1,6 @@
-import { User, UserWithPassword } from "@takwira/shared";
+import { UserData , UserWithPassword } from "@takwira/shared";
 
-export const sanitizeUser = (user: UserWithPassword): User => {
+export const sanitizeUser = (user: UserWithPassword): UserData => {
     const { hashedPassword, ...userWithoutPassword } = user;
     return userWithoutPassword;
 };

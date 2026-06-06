@@ -7,7 +7,7 @@ import { Link } from '@tanstack/react-router';
 
 
 interface LoginProps {
-  onLoginSuccess: (user : UserData) => void;
+  onLoginSuccess: (user: UserData, token: string) => void;
 }
 
 const loginSchema = z.object({
@@ -40,13 +40,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
         throw new Error(errorData.error || 'Failed to login');
       }
       const responseData = await res.json();
-      
-      if (responseData.token) {
-        localStorage.setItem('token', responseData.token);
-      }
-      
-      
-      onLoginSuccess(responseData.user);
+      onLoginSuccess(responseData.user, responseData.token);
     } catch (error) {
       console.error(error);
       setServerError(error instanceof Error ? error.message : 'An unknown error occurred');

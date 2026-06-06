@@ -1,12 +1,25 @@
 import express, { Response, Router } from "express";
+import { z } from "zod";
 import { UserRole } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
+import { validate } from "../middlewares/validateMiddleware";
 import { getUsers, persistUsers } from "../utils/userStore";
-import { normalizePhoneNumber } from "../utils/phoneUtils"
+import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { hashPassword, signToken } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
 
 const profileRouter: Router = express.Router();
+
+const updateProfileSchema = z.object({
+    body: z.object({
+        username: z.string().min(3, "Username must be at least 3 characters").max(30).regex(/^[A-Za-z0-9_-]+$/, "Invalid username format").optional(),
+        email: z.string().email("Invalid email address").optional(),
+        password: z.string().min(6, "Password must be at least 6 characters").optional(),
+        imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
+        role: z.nativeEnum(UserRole).optional(),
+        phoneNumber: z.any().optional(),
+    }),
+});
 
 profileRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
@@ -21,7 +34,7 @@ profileRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response)
     res.status(200).json(sanitizeUser(user));
 });
 
-profileRouter.put('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+profileRouter.put('/', authMiddleware, validate(updateProfileSchema), async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
     

@@ -19,9 +19,9 @@ function LoginPage() {
 
     return (
         <Login
-            onLoginSuccess={(loggedUser?: any) => {
-                if (loggedUser) {
-                    login(loggedUser);
+            onLoginSuccess={(loggedUser: any, token: string) => {
+                if (loggedUser && token) {
+                    login(loggedUser, token);
                 }
                 navigate({ to: '/stadiums' });
             }}

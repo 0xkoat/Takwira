@@ -1,20 +1,34 @@
 import express, { Request, Response, Router } from "express";
+import { z } from "zod";
 import { UserRole, UserWithPassword } from "@takwira/shared";
 import { getUsers, persistUsers } from "../utils/userStore";
 import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { hashPassword } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
+import { validate } from "../middlewares/validateMiddleware";
 
 const signUpRouter: Router = express.Router();
 const DEFAULT_USER_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
 
-signUpRouter.post('/', async (req: Request, res: Response): Promise<void> => { 
-    const { username, email, password, confirmPassword, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
-    
-    if (password !== confirmPassword) {
-        res.status(400).json({ error: "Passwords do not match." });
-        return;
-    }
+const signUpSchema = z.object({
+    body: z.object({
+        username: z.string().min(3, "Username must be at least 3 characters"),
+        email: z.string().email("Invalid email address"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        confirmPassword: z.string(),
+        phoneNumber: z.any(),
+        role: z.enum(["normal_user", "stadium_owner"], {
+            errorMap: () => ({ message: "Invalid role selected" })
+        }),
+        imageUrl: z.string().url().optional().or(z.literal("")),
+    }).refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+    }),
+});
+
+signUpRouter.post('/', validate(signUpSchema), async (req: Request, res: Response): Promise<void> => { 
+    const { username, email, password, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
 
     const users = await getUsers();
 

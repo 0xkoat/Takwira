@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './config'; 
 import express from 'express';
 import cors from 'cors';
 import stadiumsRouter from './api/stadiums';
