@@ -121,6 +121,11 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(updateStadiumS
         return;
     }
 
+    if (stadiums[index].ownerId !== req.user?.userId) {
+        res.status(403).json({ error: 'Forbidden: You do not own this stadium' });
+        return;
+    }
+
     const { name, address, capacity, pricePerHour, description } = req.body;
 
     stadiums[index] = {
@@ -143,6 +148,11 @@ stadiumsRouter.delete('/:id', authMiddleware, requireOwner, async (req: AuthRequ
 
     if (index === -1) {
         res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    if (stadiums[index].ownerId !== req.user?.userId) {
+        res.status(403).json({ error: 'Forbidden: You do not own this stadium' });
         return;
     }
 
