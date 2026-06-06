@@ -5,7 +5,7 @@ import { UserRole } from '@takwira/shared';
 import { Route as RootRoute } from './__root';
 
 export const Route = createRoute({
-  path: '/post-stadium',
+  path: '/post-stadiums',
   getParentRoute: () => RootRoute,
   component: PostStadiumRoute,
 });

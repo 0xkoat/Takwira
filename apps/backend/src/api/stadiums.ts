@@ -112,8 +112,8 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), v
 });
 
 
-stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), validate(updateStadiumSchema), async (req: AuthRequest, res: Response) => {
-    const id = (req.params as any).id;
+stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), validate(updateStadiumSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id } = req.params as unknown as z.infer<typeof stadiumIdSchema>['params'];
     const stadiums = await getStadiums();
     const index = stadiums.findIndex(s => s.id === id);
 
@@ -142,8 +142,8 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchem
     res.json(stadiums[index]);
 });
 
-stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), async (req: AuthRequest, res: Response) => {
-    const id = (req.params as any).id;
+stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id } = req.params as unknown as z.infer<typeof stadiumIdSchema>['params'];
     const stadiums = await getStadiums();
     const index = stadiums.findIndex(s => s.id === id);
 

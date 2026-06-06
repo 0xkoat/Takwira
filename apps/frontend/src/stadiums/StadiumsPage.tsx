@@ -77,7 +77,7 @@ export function StadiumsPage() {
 
           {user?.role === UserRole.StadiumOwner && (
             <button
-              onClick={() => navigate({ to: '/post-stadium' })}
+              onClick={() => navigate({ to: '/post-stadiums' })}
               className="px-4 py-2 rounded-lg bg-blue-700 text-white hover:bg-blue-600 transition-all"
             >
               Post Stadium
