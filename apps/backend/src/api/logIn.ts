@@ -23,7 +23,7 @@ logInRouter.post('/', validate(logInSchema), async (req: Request, res: Response)
     });
     
     if (!user) {
-        res.status(401).json({ error: "User does not exist" });
+        res.status(401).json({ error: "Invalid email or password" });
         return;
     }
     
