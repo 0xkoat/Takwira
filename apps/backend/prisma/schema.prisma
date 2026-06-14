@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  stadium_owner
+  normal_user
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  username       String
+  email          String    @unique
+  phoneNumber    Int
+  role           UserRole  @default(normal_user)
+  imageUrl       String
+  hashedPassword String
+  stadiums       Stadium[]
+  createdAt      DateTime  @default(now())
+}
+
+model Stadium {
+  id                Int      @id @default(autoincrement())
+  ownerId           Int
+  owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name              String
+  ownerName         String
+  ownerNumber       Int
+  city              String
+  locationURL       String
+  images            String[]
+  principalImageUrl String
+  price             Float
+  placesNum         Int
+  description       String?
+  createdAt         DateTime @default(now())
+}

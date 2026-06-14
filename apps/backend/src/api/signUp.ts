@@ -1,7 +1,6 @@
 import express, { Request, Response, Router } from "express";
 import { z } from "zod";
-import { UserRole, UserWithPassword } from "@takwira/shared";
-import { getUsers, persistUsers } from "../utils/userStore";
+import { prisma } from "../utils/prisma";
 import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { hashPassword } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
@@ -30,33 +29,30 @@ const signUpSchema = z.object({
 signUpRouter.post('/', validate(signUpSchema), async (req: Request, res: Response): Promise<void> => { 
     const { username, email, password, phoneNumber, role, imageUrl: providedImageUrl } = req.body;
 
-    const users = await getUsers();
-
-    const userExists = users.find(u => u.email === email);
+    const userExists = await prisma.user.findUnique({
+        where: { email }
+    });
+    
     if (userExists) {
         res.status(400).json({ error: "A user with this email already exists." });
         return;
     }
 
-    const lastId = users.length > 0 ? Math.max(...users.map(u => u.id)) : 0;
-    const nextId = lastId + 1;
-
     const imageUrl = providedImageUrl || DEFAULT_USER_IMAGE;
     const hashedPassword = await hashPassword(password);
 
-    const newUser: UserWithPassword = {
-        id: nextId,
-        username,
-        email,
-        phoneNumber: normalizePhoneNumber(phoneNumber),
-        role: role as UserRole,
-        imageUrl,
-        hashedPassword: hashedPassword,
-    }
-    users.push(newUser);
-    await persistUsers(users);
+    const newUser = await prisma.user.create({
+        data: {
+            username,
+            email,
+            phoneNumber: normalizePhoneNumber(phoneNumber),
+            role: role as any,
+            imageUrl,
+            hashedPassword: hashedPassword,
+        }
+    });
 
-    res.status(201).json(sanitizeUser(newUser));
+    res.status(201).json(sanitizeUser(newUser as any));
 })
 
 export default signUpRouter;
