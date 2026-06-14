@@ -1,9 +1,9 @@
 import express, { Request, Response, Router } from "express";
 import { z } from "zod";
-import { getUsers } from "../utils/userStore";
 import { comparePassword, signToken } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
 import { validate } from "../middlewares/validateMiddleware";
+import { prisma } from "../utils/prisma";
 
 const logInRouter: Router = express.Router();
 
@@ -17,25 +17,28 @@ const logInSchema = z.object({
 logInRouter.post('/', validate(logInSchema), async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
-    const users = await getUsers();
-    const user = users.find(u => u.email === email);
+    
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
     
     if (!user) {
-        res.status(401).json({ error: "Invalid email or password" });
+        res.status(401).json({ error: "User does not exist" });
         return;
     }
     
+
     const isPasswordValid = await comparePassword(password, user.hashedPassword);
     if (!isPasswordValid) {
         res.status(401).json({ error: "Invalid email or password" });
         return;
     }
 
-    const token = signToken(user);
+    const token = signToken(user as any);
 
     res.status(200).json({ 
         token,
-        user: sanitizeUser(user)
+        user: sanitizeUser(user as any)
     });
 });
 
