@@ -38,6 +38,7 @@ profileRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response)
 });
 
 profileRouter.put('/', authMiddleware, validate(updateProfileSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+    
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
     
@@ -50,32 +51,40 @@ profileRouter.put('/', authMiddleware, validate(updateProfileSchema), async (req
         return;
     }
 
-    let updatedUser = { ...user };
+    const updateData: any = {};
 
-    if (username) updatedUser.username = username;
-    if (email) updatedUser.email = email;
-    if (imageUrl) updatedUser.imageUrl = imageUrl;
-    if (phoneNumber) updatedUser.phoneNumber = normalizePhoneNumber(phoneNumber);
+    if (username) updateData.username = username;
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (phoneNumber) updateData.phoneNumber = normalizePhoneNumber(phoneNumber);
     
     if (role === 'stadium_owner' || role === 'normal_user') {
-        updatedUser.role = role as UserRole;
+        updateData.role = role as UserRole;
     }
 
     if (password) {
-        updatedUser.hashedPassword = await hashPassword(password);
+        updateData.hashedPassword = await hashPassword(password);
     }
 
-    updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: {
-            ...updatedUser
-        }
-    });
+    if (email && email !== user.email) {
+        const emailExists = await prisma.user.findUnique({
+            where: { email }
+        });
 
+        if (emailExists) {
+            res.status(400).json({ error: "A user with this email already exists." });
+            return;
+        }
+        updateData.email = email;
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: updateData
+    });
 
     const token = signToken(updatedUser as any);
 
-    res.status(201).json({ token, user: sanitizeUser(updatedUser as any) });
+    res.status(200).json({ token, user: sanitizeUser(updatedUser as any) });
 });
 
 export default profileRouter;
