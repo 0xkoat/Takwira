@@ -1,9 +1,9 @@
 import express, { Response, Router } from "express";
 import { z } from "zod";
+import { prisma } from "../utils/prisma";
 import { UserRole } from "@takwira/shared";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import { getUsers, persistUsers } from "../utils/userStore";
 import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { hashPassword, signToken } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
@@ -23,38 +23,34 @@ const updateProfileSchema = z.object({
 
 profileRouter.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
-    const users = await getUsers();
     
-    const user = users.find(u => u.id === userId);
+    const user = await prisma.user.findUnique({
+        where: { id: userId }
+    });
+    
+    
     if (!user) {
         res.status(404).json({ error: "User not found" });
         return;
     }
     
-    res.status(200).json(sanitizeUser(user));
+    res.status(200).json(sanitizeUser(user as any ));
 });
 
 profileRouter.put('/', authMiddleware, validate(updateProfileSchema), async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const { username, email, password, imageUrl, role, phoneNumber } = req.body;
     
-    const users = await getUsers();
-    const userIndex = users.findIndex(u => u.id === userId);
+    const user = await prisma.user.findUnique({
+        where: { id: userId }
+    });
     
-    if (userIndex === -1) {
+    if (!user) {
         res.status(404).json({ error: "User not found" });
         return;
     }
 
-    if (email && email !== users[userIndex].email) {
-        const emailExists = users.some(u => u.email === email);
-        if (emailExists) {
-            res.status(400).json({ error: "Email is already in use by another account." });
-            return;
-        }
-    }
-
-    const updatedUser = { ...users[userIndex] };
+    let updatedUser = { ...user };
 
     if (username) updatedUser.username = username;
     if (email) updatedUser.email = email;
@@ -69,12 +65,17 @@ profileRouter.put('/', authMiddleware, validate(updateProfileSchema), async (req
         updatedUser.hashedPassword = await hashPassword(password);
     }
 
-    users[userIndex] = updatedUser;
-    await persistUsers(users);
+    updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            ...updatedUser
+        }
+    });
 
-    const token = signToken(updatedUser);
 
-    res.status(200).json({ token, user: sanitizeUser(updatedUser) });
+    const token = signToken(updatedUser as any);
+
+    res.status(201).json({ token, user: sanitizeUser(updatedUser as any) });
 });
 
 export default profileRouter;
