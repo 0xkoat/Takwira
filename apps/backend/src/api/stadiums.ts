@@ -51,7 +51,7 @@ stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: R
     const where: any = {};
 
     if (ownerId !== undefined) {
-        where.ownerId = Number(ownerId); 
+        where.ownerId = ownerId; 
     }
 
     if (city) {
@@ -64,10 +64,10 @@ stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: R
     if (minPrice !== undefined || maxPrice !== undefined) {
         where.price = {};
         if (minPrice !== undefined) {
-            where.price.gte = Number(minPrice);
+            where.price.gte = minPrice;
         }
         if (maxPrice !== undefined) {
-            where.price.lte = Number(maxPrice);
+            where.price.lte = maxPrice;
         }
     }
 
@@ -97,9 +97,10 @@ stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: R
 stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), validate(createStadiumSchema), async (req: AuthRequest, res: Response) => {
     const { name, address, capacity, pricePerHour, description } = req.body;
     
+    // authMiddleware and requireOwner already ensure req.user exists
     const ownerId = req.user?.userId;
     if (!ownerId) {
-        res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+        res.status(500).json({ error: 'Internal Server Error: User ID missing from token' });
         return;
     }
 
@@ -108,14 +109,14 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), v
     
     const newStadium = await prisma.stadium.create({
         data: {
-            ownerId : Number(ownerId),
+            ownerId: ownerId,
             name,
             city: address,
             locationURL: '',
             images: imageUrls,
             principalImageUrl: imageUrls[0] ?? '',
-            price : Number(pricePerHour),
-            placesNum: Number(capacity),
+            price: pricePerHour,
+            placesNum: capacity,
             description: description ?? '',
         }
     });
@@ -129,7 +130,7 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchem
     
     const { id } = req.params as unknown as z.infer<typeof stadiumIdSchema>['params'];
     const stadium = await prisma.stadium.findUnique({
-        where: { id: Number(id) }
+        where: { id }
     });
 
     if (!stadium) {
@@ -153,7 +154,7 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchem
     if (description !== undefined) updateData.description = description;
 
     const updatedStadium = await prisma.stadium.update({
-        where: { id: Number(id) },
+        where: { id },
         data: updateData
     });
 
@@ -164,7 +165,7 @@ stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSc
     const { id } = req.params as unknown as z.infer<typeof stadiumIdSchema>['params'];
     
     const stadium = await prisma.stadium.findUnique({
-        where: { id: Number(id) }
+        where: { id }
     });
 
     if (!stadium) {
@@ -178,7 +179,7 @@ stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSc
     }
 
     await prisma.stadium.delete({
-        where: { id: Number(id) }
+        where: { id }
     });
 
     res.json({ message: "Stadium deleted successfully" });

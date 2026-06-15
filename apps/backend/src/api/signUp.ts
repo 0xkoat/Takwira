@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from "express";
 import { z } from "zod";
 import { prisma } from "../utils/prisma";
+import { UserRole } from "@takwira/shared";
 import { normalizePhoneNumber } from "../utils/phoneUtils";
 import { hashPassword } from "../utils/authUtils";
 import { sanitizeUser } from "../utils/userUtils";
@@ -21,7 +22,7 @@ const signUpSchema = z.object({
             .regex(/(?=.*\W)/, "Password must contain a symbol."),
         confirmPassword: z.string(),
         phoneNumber: z.any(),
-        role: z.enum(["normal_user", "stadium_owner"], {
+        role: z.nativeEnum(UserRole, {
             errorMap: () => ({ message: "Invalid role selected" })
         }),
         imageUrl: z.string().url().optional().or(z.literal("")),
@@ -51,7 +52,7 @@ signUpRouter.post('/', validate(signUpSchema), async (req: Request, res: Respons
             username,
             email,
             phoneNumber: normalizePhoneNumber(phoneNumber),
-            role: role as any,
+            role,
             imageUrl,
             hashedPassword: hashedPassword,
         }
