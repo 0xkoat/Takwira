@@ -14,7 +14,13 @@ const updateProfileSchema = z.object({
     body: z.object({
         username: z.string().min(3, "Username must be at least 3 characters").max(30).regex(/^[A-Za-z0-9_-]+$/, "Invalid username format").optional(),
         email: z.string().email("Invalid email address").optional(),
-        password: z.string().min(6, "Password must be at least 6 characters").optional(),
+        password: z.string()
+            .min(8, "Password must be at least 8 characters long.")
+            .regex(/(?=.*[a-z])/, "Password must contain a lowercase letter.")
+            .regex(/(?=.*[A-Z])/, "Password must contain an uppercase letter.")
+            .regex(/(?=.*\d)/, "Password must contain a number.")
+            .regex(/(?=.*\W)/, "Password must contain a symbol.")
+            .optional(),
         imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
         role: z.nativeEnum(UserRole).optional(),
         phoneNumber: z.any().optional(),

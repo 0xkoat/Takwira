@@ -11,9 +11,14 @@ const DEFAULT_USER_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank
 
 const signUpSchema = z.object({
     body: z.object({
-        username: z.string().min(3, "Username must be at least 3 characters"),
+        username: z.string().min(3, "Username must be at least 3 characters").max(30).regex(/^[A-Za-z0-9_-]+$/, "Invalid username format"),
         email: z.string().email("Invalid email address"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
+        password: z.string()
+            .min(8, "Password must be at least 8 characters long.")
+            .regex(/(?=.*[a-z])/, "Password must contain a lowercase letter.")
+            .regex(/(?=.*[A-Z])/, "Password must contain an uppercase letter.")
+            .regex(/(?=.*\d)/, "Password must contain a number.")
+            .regex(/(?=.*\W)/, "Password must contain a symbol."),
         confirmPassword: z.string(),
         phoneNumber: z.any(),
         role: z.enum(["normal_user", "stadium_owner"], {

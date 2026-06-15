@@ -32,8 +32,6 @@ model Stadium {
   ownerId           Int
   owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name              String
-  ownerName         String
-  ownerNumber       Int
   city              String
   locationURL       String
   images            String[]

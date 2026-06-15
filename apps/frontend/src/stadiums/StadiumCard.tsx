@@ -19,7 +19,7 @@ export function StadiumCard({ stadium }: StadiumCardProps) {
 
       <div className="px-4 py-3 space-y-1 text-sm text-gray-300">
         <p>
-          <span className="text-gray-400">Owner:</span> {stadium.ownerName}
+          <span className="text-gray-400">Owner:</span> {stadium.owner?.username ?? 'Unknown'}
         </p>
         <p>
           <span className="text-gray-400">City:</span> {stadium.city}

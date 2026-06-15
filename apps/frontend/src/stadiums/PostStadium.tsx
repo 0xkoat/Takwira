@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ALLOWED_EXTENSIONS, ALLOWED_TYPES } from '@takwira/shared';
-import { useAuth } from '../context/AuthContext';
 
 const getFileExtension = (name: string) => {
   const parts = name.split('.');
@@ -39,7 +38,6 @@ type StadiumForm = z.infer<typeof stadiumSchema>;
 
 export default function PostStadium() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<StadiumForm>({
     resolver: zodResolver(stadiumSchema),
@@ -54,13 +52,6 @@ export default function PostStadium() {
     formData.append('capacity', String(data.capacity));
     formData.append('pricePerHour', String(data.pricePerHour));
     if (data.description) formData.append('description', data.description);
-
-    
-    if (user) {
-      formData.append('ownerId', String(user.id));
-      formData.append('ownerName', user.username);
-      formData.append('ownerNumber', String(user.phoneNumber));
-    }
 
     const files = Array.from(data.images as FileList) as File[];
     files.forEach((f) => formData.append('images', f, f.name));
