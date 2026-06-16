@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react';
+import { ChangeEvent, useState, useRef } from 'react';
 
 import { ALLOWED_EXTENSIONS, ALLOWED_TYPES, MAX_FILE_SIZE } from '@takwira/shared';
 
 interface ProfilePhotoProps {
   imageUrl: string;
-  onPhotoUpdate: (newImageUrl: string) => void;
+  onPhotoUpdate: (photoFile: File) => Promise<void>;
+  onPhotoRemove: () => Promise<void>;
 }
 
 const getFileExtension = (fileName: string) => {
@@ -12,13 +13,13 @@ const getFileExtension = (fileName: string) => {
   return match ? match[1] : '';
 };
 
-export function ProfilePhoto({ imageUrl, onPhotoUpdate }: ProfilePhotoProps) {
+export function ProfilePhoto({ imageUrl, onPhotoUpdate, onPhotoRemove }: ProfilePhotoProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setPhotoError(null);
     if (!file) return;
@@ -43,17 +44,21 @@ export function ProfilePhoto({ imageUrl, onPhotoUpdate }: ProfilePhotoProps) {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!photoFile) {
       setPhotoError('No photo selected.');
       return;
     }
-    const newImageUrl = URL.createObjectURL(photoFile);
-    onPhotoUpdate(newImageUrl);
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setPhotoError(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    try {
+      await onPhotoUpdate(photoFile);
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      setPhotoError(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : 'Failed to upload photo.');
+    }
   };
 
   return (
@@ -103,6 +108,17 @@ export function ProfilePhoto({ imageUrl, onPhotoUpdate }: ProfilePhotoProps) {
             className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200 transition-all"
           >
             Cancel
+          </button>
+        </div>
+      )}
+      {!photoFile && (
+        <div className="mt-4 flex gap-3 animate-fadeIn">
+          <button
+            type="button"
+            onClick={onPhotoRemove}
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-medium transition-all"
+          >
+            Remove Photo
           </button>
         </div>
       )}

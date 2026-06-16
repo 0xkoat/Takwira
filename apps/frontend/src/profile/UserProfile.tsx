@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export function UserProfile() {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
 
   if (!user) {
     return null;
@@ -35,30 +35,74 @@ export function UserProfile() {
     toast.success('Credentials updated successfully!');
   };
 
-  const handlePhotoUpdate = async (newImageUrl: string) => {
+  const handlePhotoUpdate = async (photoFile: File) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/photo`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Failed to upload photo' }));
+      throw new Error(errorData.error || 'Failed to upload photo');
+    }
+
+    const data = await res.json();
+    updateUser(data.user, token || '');
+    toast.success('Profile photo updated successfully!');
+  };
+
+  const handlePhotoRemove = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
-        method: 'PUT',
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/photo`, {
+        method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ imageUrl: newImageUrl })
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to update photo');
+        const errorData = await res.json().catch(() => ({ error: 'Failed to remove photo' }));
+        throw new Error(errorData.error || 'Failed to remove photo');
       }
 
-      const newUserData = await res.json();
-      updateUser(newUserData.user, newUserData.token);
-      toast.success('Profile photo updated successfully!');
+      const data = await res.json();
+      updateUser(data.user, token || '');
+      toast.success('Profile photo removed successfully!');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update photo');
+      toast.error(error instanceof Error ? error.message : 'Failed to remove photo');
       throw error;
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    const token = localStorage.getItem('token');
+
+    const confirmed = window.confirm('Are you sure you want to delete your account? This cannot be undone.');
+    if (!confirmed) return;
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Failed to delete account' }));
+      throw new Error(errorData.error || 'Failed to delete account');
+    }
+
+    logout();
+    navigate({ to: '/login' });
+    toast.success('Your account has been deleted.');
   };
 
   return (
@@ -67,17 +111,26 @@ export function UserProfile() {
         <h2 className="text-2xl font-semibold text-emerald-400">
           My Profile
         </h2>
-        <button
-          onClick={() => navigate({ to: '/stadiums' })}
-          className="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition-all"
-        >
-          Back to Stadiums
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate({ to: '/stadiums' })}
+            className="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition-all"
+          >
+            Back to Stadiums
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white transition-all"
+          >
+            Delete Account
+          </button>
+        </div>
       </div>
 
       <ProfilePhoto
         imageUrl={user.imageUrl}
         onPhotoUpdate={handlePhotoUpdate}
+        onPhotoRemove={handlePhotoRemove}
       />
 
       <EditCredentials

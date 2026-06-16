@@ -1,13 +1,12 @@
 import express, { Request, Response, Router } from "express";
-import multer from "multer";
 import { z } from "zod";
 import { prisma } from "../utils/prisma";
 import { authMiddleware, AuthRequest } from "../middlewares/authMiddleware";
 import { requireOwner } from "../middlewares/requireOwner";
 import { validate } from "../middlewares/validateMiddleware";
+import { uploadStadiumImages, deleteLocalStadiumImage } from "../utils/stadiumImagesUtils";
 
 const stadiumsRouter: Router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 const getStadiumsSchema = z.object({
     query: z.object({
@@ -94,10 +93,9 @@ stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: R
 });
 
 
-stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), validate(createStadiumSchema), async (req: AuthRequest, res: Response) => {
+stadiumsRouter.post('/', authMiddleware, requireOwner, uploadStadiumImages.array('images', 10), validate(createStadiumSchema), async (req: AuthRequest, res: Response) => {
     const { name, address, capacity, pricePerHour, description } = req.body;
     
-    // authMiddleware and requireOwner already ensure req.user exists
     const ownerId = req.user?.userId;
     if (!ownerId) {
         res.status(500).json({ error: 'Internal Server Error: User ID missing from token' });
@@ -105,22 +103,41 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, upload.array('images'), v
     }
 
     const files = (req.files as Express.Multer.File[]) ?? [];
-    const imageUrls = files.map((f) => `data:${f.mimetype};base64,${f.buffer.toString('base64')}`);
-    
+
     const newStadium = await prisma.stadium.create({
         data: {
             ownerId: ownerId,
             name,
             city: address,
             locationURL: '',
-            images: imageUrls,
-            principalImageUrl: imageUrls[0] ?? '',
             price: pricePerHour,
             placesNum: capacity,
             description: description ?? '',
+            images: {
+                create: files.map((f) => ({
+                    url: `/uploads/stadiums/${f.filename}`,
+                }))
+            },
+            principalImageId: files.length > 0 ? undefined : null,
+        },
+        include: {
+            images: true,
+            owner: {
+                select: {
+                    id: true,
+                    username: true,
+                    imageUrl: true,
+                    phoneNumber: true,
+                }
+            }
         }
     });
- 
+    if (newStadium.images.length > 0) {
+        await prisma.stadium.update({
+            where: { id: newStadium.id },
+            data: { principalImageId: newStadium.images[0].id }
+        });
+    }
 
     res.status(201).json(newStadium);
 });
@@ -183,6 +200,138 @@ stadiumsRouter.delete('/:id', authMiddleware, requireOwner, validate(stadiumIdSc
     });
 
     res.json({ message: "Stadium deleted successfully" });
+});
+
+stadiumsRouter.post('/:id/images', authMiddleware, requireOwner, uploadStadiumImages.array('images', 10), async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const stadiumId = parseInt(id);
+
+    const stadium = await prisma.stadium.findUnique({
+        where: { id: stadiumId },
+        include: { images: true }
+    });
+
+    if (!stadium) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    if (stadium.ownerId !== req.user?.userId) {
+        res.status(403).json({ error: 'Forbidden: You do not own this stadium' });
+        return;
+    }
+
+    const currentImageCount = stadium.images.length;
+    if (currentImageCount >= 10) {
+        res.status(400).json({ error: 'Stadium already has maximum of 10 images' });
+        return;
+    }
+
+    const files = (req.files as Express.Multer.File[]) ?? [];
+    const canAddCount = Math.min(files.length, 10 - currentImageCount);
+
+    const filesToAdd = files.slice(0, canAddCount);
+
+    const updatedStadium = await prisma.stadium.update({
+        where: { id: stadiumId },
+        data: {
+            images: {
+                create: filesToAdd.map((f) => ({
+                    url: `/uploads/stadiums/${f.filename}`,
+                }))
+            }
+        },
+        include: { images: true, owner: { select: { id: true, username: true, imageUrl: true, phoneNumber: true } } }
+    });
+
+    res.status(201).json(updatedStadium);
+});
+
+stadiumsRouter.delete('/:id/images/:imageId', authMiddleware, requireOwner, validate(stadiumIdSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id, imageId } = req.params;
+    const stadiumId = parseInt(id);
+
+    const stadium = await prisma.stadium.findUnique({
+        where: { id: stadiumId },
+        include: { images: true }
+    });
+
+    if (!stadium) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    if (stadium.ownerId !== req.user?.userId) {
+        res.status(403).json({ error: 'Forbidden: You do not own this stadium' });
+        return;
+    }
+
+    const image = await prisma.image.findUnique({
+        where: { id: imageId }
+    });
+
+    if (!image || image.stadiumId !== stadiumId) {
+        res.status(404).json({ error: 'Image not found' });
+        return;
+    }
+
+    await deleteLocalStadiumImage(image.url);
+
+    await prisma.image.delete({
+        where: { id: imageId }
+    });
+
+    let updatedStadium = await prisma.stadium.findUnique({
+        where: { id: stadiumId },
+        include: { images: true }
+    });
+
+    if (stadium.principalImageId === imageId && updatedStadium && updatedStadium.images.length > 0) {
+        updatedStadium = await prisma.stadium.update({
+            where: { id: stadiumId },
+            data: { principalImageId: updatedStadium.images[0].id },
+            include: { images: true, owner: { select: { id: true, username: true, imageUrl: true, phoneNumber: true } } }
+        });
+    }
+
+    res.json(updatedStadium);
+});
+
+stadiumsRouter.put('/:id/images/:imageId/principal', authMiddleware, requireOwner, validate(stadiumIdSchema), async (req: AuthRequest, res: Response): Promise<void> => {
+    const { id, imageId } = req.params;
+    const stadiumId = parseInt(id);
+
+    const stadium = await prisma.stadium.findUnique({
+        where: { id: stadiumId },
+        include: { images: true }
+    });
+
+    if (!stadium) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    if (stadium.ownerId !== req.user?.userId) {
+        res.status(403).json({ error: 'Forbidden: You do not own this stadium' });
+        return;
+    }
+
+    const image = await prisma.image.findUnique({
+        where: { id: imageId }
+    });
+
+    if (!image || image.stadiumId !== stadiumId) {
+        res.status(404).json({ error: 'Image not found' });
+        return;
+    }
+
+    const updatedStadium = await prisma.stadium.update({
+        where: { id: stadiumId },
+        data: { principalImageId: imageId },
+        include: { images: true, owner: { select: { id: true, username: true, imageUrl: true, phoneNumber: true } } }
+    });
+
+    res.json(updatedStadium);
 });
 
 export default stadiumsRouter;

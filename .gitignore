@@ -17,5 +17,5 @@ packages/**/build
 .turbo
 coverage/
 /apps/backend/src/data
-# Backend Prisma generated files
 /apps/backend/src/generated/prisma
+/apps/backend/uploads/*

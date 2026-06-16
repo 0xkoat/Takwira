@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Stadium } from '@takwira/shared';
 import { useForm } from 'react-hook-form';
+import { StadiumImagesManager, StadiumImage } from '../stadiums/StadiumImagesManager';
 
 type EditForm = {
   name: string;
@@ -16,6 +17,8 @@ export function OwnerStadiums() {
   const [stadiums, setStadiums] = useState<Stadium[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Stadium | null>(null);
+  const [editingImages, setEditingImages] = useState<StadiumImage[]>([]);
+  const [editingPrincipalImageId, setEditingPrincipalImageId] = useState<string>();
   const [deleting, setDeleting] = useState<number | null>(null);
 
   const { register, handleSubmit, reset } = useForm<EditForm>();
@@ -30,6 +33,13 @@ export function OwnerStadiums() {
 
   const openEdit = (stadium: Stadium) => {
     setEditing(stadium);
+    setEditingImages(
+      (stadium as any).images?.map((img: any) => ({
+        id: img.id,
+        url: img.url,
+      })) || []
+    );
+    setEditingPrincipalImageId((stadium as any).principalImageId);
     reset({
       name: stadium.name,
       address: stadium.city,
@@ -67,6 +77,20 @@ export function OwnerStadiums() {
     if (!res.ok) return;
     setStadiums((prev) => prev.filter((s) => s.id !== id));
     setDeleting(null);
+  };
+
+  const handleImagesUpdated = (images: StadiumImage[], principalImageId?: string) => {
+    setEditingImages(images);
+    setEditingPrincipalImageId(principalImageId);
+    if (editing) {
+      setStadiums((prev) =>
+        prev.map((s) =>
+          s.id === editing.id
+            ? { ...s, images, principalImageId } as any
+            : s
+        )
+      );
+    }
   };
 
   if (loading) {
@@ -125,7 +149,7 @@ export function OwnerStadiums() {
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+          <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold text-emerald-400 mb-5">Edit Stadium</h3>
             <form onSubmit={handleSubmit(saveEdit)} className="space-y-4">
               <div>
@@ -150,6 +174,17 @@ export function OwnerStadiums() {
                 <label className="block text-sm text-gray-300 mb-1">Description</label>
                 <textarea {...register('description')} rows={3} className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm resize-none" />
               </div>
+
+              <div className="border-t border-gray-700 pt-4 mt-4">
+                <StadiumImagesManager
+                  stadiumId={editing.id}
+                  images={editingImages}
+                  principalImageId={editingPrincipalImageId}
+                  onImagesUpdated={handleImagesUpdated}
+                  isOwner={true}
+                />
+              </div>
+
               <div className="flex gap-3 pt-1">
                 <button type="submit" className="flex-1 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold transition-all">
                   Save Changes

@@ -5,6 +5,7 @@ import stadiumsRouter from './api/stadiums';
 import signUpRouter from './api/signUp';
 import logInRouter from './api/logIn';
 import profileRouter from './api/profile';
+import path from "path";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
@@ -23,6 +24,7 @@ app.get('/api/ping', (_req, res) => {
 app.use('/api/auth/signup', signUpRouter);
 app.use('/api/auth/login', logInRouter);
 app.use('/api/profile', profileRouter);
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 app.use('/api/stadiums', stadiumsRouter);
 
 app.listen(port, () => {

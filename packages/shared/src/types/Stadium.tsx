@@ -5,14 +5,20 @@ export interface StadiumOwner {
   phoneNumber: number;
 }
 
+export interface StadiumImage {
+  id: string;
+  url: string;
+}
+
 export interface Stadium {
   id: number;
   ownerId: number;
   name: string;
   city: string;
   locationURL: string;
-  images: string[];
+  images?: StadiumImage[];
   principalImageUrl: string;
+  principalImageId?: string;
   price: number;
   placesNum: number;
   description?: string;
