@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 export type StadiumImage = { id: string; url: string };
 
-export interface StadiumImagesManagerProps {
+interface StadiumImagesManagerProps {
   stadiumId: number;
   images: StadiumImage[];
   principalImageId?: string;

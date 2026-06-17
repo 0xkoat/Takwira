@@ -34,7 +34,7 @@ export const uploadStadiumImages = multer({
     },
 });
 
-export const getLocalStadiumImagePath = (imageUrl: string) => {
+const getLocalStadiumImagePath = (imageUrl: string) => {
     const filename = path.basename(imageUrl);
     return path.resolve(uploadDir, filename);
 };
