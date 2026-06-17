@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { ALLOWED_EXTENSIONS, ALLOWED_TYPES } from '@takwira/shared';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ export function StadiumImagesManager({
   onImagesUpdated,
   isOwner = true,
 }: StadiumImagesManagerProps) {
+  const { logout } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [settingPrincipal, setSettingPrincipal] = useState(false);
@@ -76,6 +78,11 @@ export function StadiumImagesManager({
         }
       );
 
+      if (res.status === 401) {
+        logout();
+        throw new Error('Session expired. Please log in again.');
+      }
+
       if (!res.ok) {
         throw new Error('Failed to upload images');
       }
@@ -104,6 +111,11 @@ export function StadiumImagesManager({
         }
       );
 
+      if (res.status === 401) {
+        logout();
+        throw new Error('Session expired. Please log in again.');
+      }
+
       if (!res.ok) {
         throw new Error('Failed to delete image');
       }
@@ -131,6 +143,11 @@ export function StadiumImagesManager({
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      if (res.status === 401) {
+        logout();
+        throw new Error('Session expired. Please log in again.');
+      }
 
       if (!res.ok) {
         throw new Error('Failed to set principal image');
@@ -204,7 +221,7 @@ export function StadiumImagesManager({
               >
                
                 <img
-                  src={image.url}
+                  src={image.url.startsWith('/uploads') ? `${import.meta.env.VITE_API_BASE_URL}${image.url}` : image.url}
                   alt="Stadium"
                   className="w-full h-32 object-cover"
                 />

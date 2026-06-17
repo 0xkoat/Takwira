@@ -14,7 +14,9 @@ export function Header() {
         </div>
         {user && (
           <img
-            src={user.imageUrl}
+            src={user.imageUrl && user.imageUrl.startsWith('/uploads')
+              ? `${import.meta.env.VITE_API_BASE_URL}${user.imageUrl}`
+              : user.imageUrl}
             alt={user.username ?? 'Profile'}
             className="w-12 h-12 rounded-full ring-2 ring-emerald-400 object-cover"
           />

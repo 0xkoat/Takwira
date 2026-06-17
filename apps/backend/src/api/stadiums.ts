@@ -22,6 +22,7 @@ const createStadiumSchema = z.object({
     body: z.object({
         name: z.string().min(3, "Stadium name must be at least 3 characters"),
         address: z.string().min(5, "Address is too short"),
+        locationURL: z.string().url("Location URL must be valid"),
         capacity: z.coerce.number().int().positive("Capacity must be a positive integer"),
         pricePerHour: z.coerce.number().nonnegative("Price must be a non-negative number"),
         description: z.string().max(1000).optional(),
@@ -32,6 +33,7 @@ const updateStadiumSchema = z.object({
     body: z.object({
         name: z.string().min(3, "Stadium name must be at least 3 characters").optional(),
         address: z.string().min(5, "Address is too short").optional(),
+        locationURL: z.string().url("Location URL must be valid").optional(),
         capacity: z.coerce.number().int().positive("Capacity must be a positive integer").optional(),
         pricePerHour: z.coerce.number().nonnegative("Price must be a non-negative number").optional(),
         description: z.string().max(1000).optional(),
@@ -84,17 +86,58 @@ stadiumsRouter.get('/', validate(getStadiumsSchema), async (req: Request, res: R
                     imageUrl: true,
                     phoneNumber: true,
                 }
-            }
+            },
+            images: true,
         },
     });
 
-  
-    res.json(filteredStadiums);
+    const mappedStadiums = filteredStadiums.map((stadium) => {
+        const principalImage = stadium.images.find((image) => image.id === stadium.principalImageId) || stadium.images[0];
+        const principalImageUrl = principalImage ? principalImage.url : '';
+        return {
+            ...stadium,
+            principalImageUrl,
+        };
+    });
+
+    res.json(mappedStadiums);
+});
+
+stadiumsRouter.get('/:id', validate(stadiumIdSchema), async (req: Request, res: Response) => {
+    const { id } = req.params as unknown as z.infer<typeof stadiumIdSchema>['params'];
+
+    const stadium = await prisma.stadium.findUnique({
+        where: { id },
+        include: {
+            owner: {
+                select: {
+                    id: true,
+                    username: true,
+                    imageUrl: true,
+                    phoneNumber: true,
+                }
+            },
+            images: true,
+        },
+    });
+
+    if (!stadium) {
+        res.status(404).json({ error: 'Stadium not found' });
+        return;
+    }
+
+    const principalImage = stadium.images.find((image) => image.id === stadium.principalImageId) || stadium.images[0];
+    const principalImageUrl = principalImage ? principalImage.url : '';
+
+    res.json({
+        ...stadium,
+        principalImageUrl,
+    });
 });
 
 
 stadiumsRouter.post('/', authMiddleware, requireOwner, uploadStadiumImages.array('images', 10), validate(createStadiumSchema), async (req: AuthRequest, res: Response) => {
-    const { name, address, capacity, pricePerHour, description } = req.body;
+    const { name, address, locationURL, capacity, pricePerHour, description } = req.body;
     
     const ownerId = req.user?.userId;
     if (!ownerId) {
@@ -109,7 +152,7 @@ stadiumsRouter.post('/', authMiddleware, requireOwner, uploadStadiumImages.array
             ownerId: ownerId,
             name,
             city: address,
-            locationURL: '',
+            locationURL,
             price: pricePerHour,
             placesNum: capacity,
             description: description ?? '',
@@ -160,7 +203,7 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchem
         return;
     }
 
-    const { name, address, capacity, pricePerHour, description } = req.body;
+    const { name, address, locationURL, capacity, pricePerHour, description } = req.body;
 
     const updateData: any = {};
 
@@ -169,6 +212,7 @@ stadiumsRouter.put('/:id', authMiddleware, requireOwner, validate(stadiumIdSchem
     if (capacity !== undefined) updateData.placesNum = capacity;
     if (pricePerHour !== undefined) updateData.price = pricePerHour;
     if (description !== undefined) updateData.description = description;
+    if (locationURL !== undefined) updateData.locationURL = locationURL;
 
     const updatedStadium = await prisma.stadium.update({
         where: { id },

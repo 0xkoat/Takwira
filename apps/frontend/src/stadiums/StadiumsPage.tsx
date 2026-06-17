@@ -26,6 +26,10 @@ export function StadiumsPage() {
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/stadiums?${params.toString()}`);
+      if (response.status === 401) {
+        logout();
+        return;
+      }
       if (!response.ok) throw new Error('Network response was not ok');
       const data = await response.json();
       setStadiums(data);

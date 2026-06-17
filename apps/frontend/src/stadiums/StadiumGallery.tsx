@@ -26,11 +26,11 @@ export function StadiumGallery({
 
   return (
     <div className="space-y-4">
-      <div className="relative rounded-xl overflow-hidden bg-gray-800 aspect-video flex items-center justify-center">
+      <div className="relative rounded-xl overflow-hidden bg-gray-800 aspect-video">
         <img
           src={currentImage.url}
           alt={`${stadiumName} - Image ${selectedIndex + 1}`}
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
         {currentImage.id === principalImageId && (
           <div className="absolute top-3 left-3 bg-emerald-600 text-white px-3 py-1 rounded-lg text-sm font-semibold flex items-center gap-1">

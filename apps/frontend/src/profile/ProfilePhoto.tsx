@@ -64,12 +64,16 @@ export function ProfilePhoto({ imageUrl, onPhotoUpdate, onPhotoRemove }: Profile
   return (
     <div className="flex flex-col items-center mb-10">
       <div className="relative group">
-        <img
-          src={photoPreview ?? imageUrl}
-          alt="Profile"
-          className="w-32 h-32 rounded-full object-cover border-4 border-emerald-800 shadow-lg shadow-emerald-900/30
-                     transition-transform duration-300 group-hover:scale-105"
-        />
+          <img
+            src={
+              photoPreview ?? (imageUrl && imageUrl.startsWith('/uploads')
+                ? `${import.meta.env.VITE_API_BASE_URL}${imageUrl}`
+                : imageUrl)
+            }
+            alt="Profile"
+            className="w-32 h-32 rounded-full object-cover border-4 border-emerald-800 shadow-lg shadow-emerald-900/30
+                       transition-transform duration-300 group-hover:scale-105"
+          />
         <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <span className="text-white text-xs font-semibold">Change</span>
         </div>

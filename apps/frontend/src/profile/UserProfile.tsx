@@ -101,7 +101,7 @@ export function UserProfile() {
     }
 
     logout();
-    navigate({ to: '/login' });
+    navigate({ to: '/' });
     toast.success('Your account has been deleted.');
   };
 

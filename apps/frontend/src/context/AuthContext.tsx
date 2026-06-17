@@ -1,18 +1,28 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useNavigate } from '@tanstack/react-router';
 import { UserData } from '@takwira/shared';
 
 interface AuthContextType {
     user: UserData | null;
     login: (user: UserData, token: string) => void;
-    logout: () => void;
+    logout: (redirect?: boolean) => void;
     updateUser: (user: UserData, token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const navigate = useNavigate();
     const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const logout = (redirect = true) => {
+        localStorage.removeItem('token');
+        setUser(null);
+        if (redirect) {
+            navigate({ to: '/' });
+        }
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -26,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
             .then(data => setUser(data))
             .catch(() => {
-                localStorage.removeItem('token');
+                logout();
             })
             .finally(() => setLoading(false));
         } else {
@@ -37,11 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = (loggedUser: UserData, token: string) => {
         localStorage.setItem('token', token);
         setUser(loggedUser);
-    };
-
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
     };
 
     const updateUser = (updatedUser: UserData, token: string) => {

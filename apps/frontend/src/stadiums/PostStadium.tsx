@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '../context/AuthContext';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ALLOWED_EXTENSIONS, ALLOWED_TYPES } from '@takwira/shared';
@@ -12,6 +13,7 @@ const getFileExtension = (name: string) => {
 const stadiumSchema = z.object({
   name: z.string().min(3, 'Stadium name must be at least 3 characters.'),
   address: z.string().min(5, 'Address is too short.'),
+  locationURL: z.string().url('Location URL must be a valid URL.'),
   capacity: z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), z.number().int().positive('Capacity must be a positive integer')),
   pricePerHour: z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), z.number().nonnegative('Price must be a non-negative number')),
   description: z
@@ -38,11 +40,12 @@ type StadiumForm = z.infer<typeof stadiumSchema>;
 
 export default function PostStadium() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<StadiumForm>({
     resolver: zodResolver(stadiumSchema),
     mode: 'onSubmit',
-    defaultValues: { name: '', address: '', capacity: 0, pricePerHour: 0, description: '' as any },
+    defaultValues: { name: '', address: '', locationURL: '', capacity: 0, pricePerHour: 0, description: '' as any },
   });
 
   const onSubmit = async (data: StadiumForm) => {
@@ -51,6 +54,7 @@ export default function PostStadium() {
     formData.append('address', data.address);
     formData.append('capacity', String(data.capacity));
     formData.append('pricePerHour', String(data.pricePerHour));
+    formData.append('locationURL', data.locationURL);
     if (data.description) formData.append('description', data.description);
 
     const files = Array.from(data.images as FileList) as File[];
@@ -67,6 +71,11 @@ export default function PostStadium() {
       },
       body: formData,
     });
+
+    if (res.status === 401) {
+      logout();
+      throw new Error('Session expired. Please log in again.');
+    }
 
     if (!res.ok) throw new Error('Failed to post stadium');
     navigate({ to: '/profile' });
@@ -95,6 +104,12 @@ export default function PostStadium() {
           <label className="block text-sm font-medium text-gray-300 mb-1">Address</label>
           <input {...register('address')} className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white" />
           {errors.address && <p className="text-red-400 text-sm mt-1">{errors.address.message as string}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Location URL</label>
+          <input {...register('locationURL')} className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white" placeholder="https://maps.google.com/..." />
+          {errors.locationURL && <p className="text-red-400 text-sm mt-1">{errors.locationURL.message as string}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
