@@ -1,0 +1,147 @@
+import { useNavigate } from '@tanstack/react-router';
+import { useAuth } from '../context/AuthContext';
+import { ProfilePhoto } from './ProfilePhoto';
+import { EditCredentials } from './EditCredentials';
+import { OwnerStadiums } from './OwnerStadiums';
+import { UserData, UserRole } from '@takwira/shared';
+import { toast } from 'sonner';
+
+export function UserProfile() {
+  const navigate = useNavigate();
+  const { user, updateUser, logout } = useAuth();
+
+  if (!user) {
+    return null;
+  }
+
+  const handleCredentialsUpdate = async (updatedData: Omit<UserData, 'imageUrl' | 'id'>) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedData)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to update credentials');
+    }
+
+    const newUserData = await res.json();
+    updateUser(newUserData.user, newUserData.token);
+    toast.success('Credentials updated successfully!');
+  };
+
+  const handlePhotoUpdate = async (photoFile: File) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/photo`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Failed to upload photo' }));
+      throw new Error(errorData.error || 'Failed to upload photo');
+    }
+
+    const data = await res.json();
+    updateUser(data.user, token || '');
+    toast.success('Profile photo updated successfully!');
+  };
+
+  const handlePhotoRemove = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/photo`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to remove photo' }));
+        throw new Error(errorData.error || 'Failed to remove photo');
+      }
+
+      const data = await res.json();
+      updateUser(data.user, token || '');
+      toast.success('Profile photo removed successfully!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove photo');
+      throw error;
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const token = localStorage.getItem('token');
+
+    const confirmed = window.confirm('Are you sure you want to delete your account? This cannot be undone.');
+    if (!confirmed) return;
+
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Failed to delete account' }));
+      throw new Error(errorData.error || 'Failed to delete account');
+    }
+
+    logout();
+    navigate({ to: '/' });
+    toast.success('Your account has been deleted.');
+  };
+
+  return (
+    <div className="bg-gray-900 border border-emerald-800/30 rounded-2xl p-8 shadow-xl shadow-black/20">
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <h2 className="text-2xl font-semibold text-emerald-400">
+          My Profile
+        </h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate({ to: '/stadiums' })}
+            className="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition-all"
+          >
+            Back to Stadiums
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white transition-all"
+          >
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      <ProfilePhoto
+        imageUrl={user.imageUrl}
+        onPhotoUpdate={handlePhotoUpdate}
+        onPhotoRemove={handlePhotoRemove}
+      />
+
+      <EditCredentials
+        username={user.username}
+        email={user.email}
+        phoneNumber={user.phoneNumber}
+        role={user.role}
+        onSave={handleCredentialsUpdate}
+      />
+
+      {user.role === UserRole.StadiumOwner && <OwnerStadiums />}
+    </div>
+  );
+}
